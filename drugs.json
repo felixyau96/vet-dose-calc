@@ -1,14 +1,15 @@
 {
   "drugs": [
     {
-      "id": "maropitant-injectable-cat",
+      "id": "maropitant-injectable",
       "name": "maropitant (injectable)",
       "shortName": "Maropitant",
       "brandNames": [
         "Prevomax",
-        "Cerenia injectable"
+        "Cerenia"
       ],
       "species": [
+        "dog",
         "cat"
       ],
       "routes": [
@@ -24,17 +25,86 @@
       "form": "injectable",
       "concentrationMgPerMl": 10,
       "notes": [
-        "1 mg/kg SC or IV once daily (SID)",
-        "Same table also lists 1 mg/kg PO q24h",
-        "SC may be painful (guideline adverse-effect note)",
-        "Hospital stock: Prevomax / Cerenia injectable 10 mg/mL"
+        "1 mg/kg SC or IV once daily (SID), up to 5 consecutive days (Plumb label tables)",
+        "Dogs: SC from 2 months; SC or IV from 4 months for acute vomiting",
+        "Cats (\u22654 months): label treatment of vomiting 1 mg/kg SC or IV SID \u22645 days",
+        "SC may be painful \u2014 refrigerating injectable may reduce pain (Plumb)",
+        "Hospital stock concentration: 10 mg/mL (Prevomax / Cerenia injectable) \u2014 product strength, not stated in Plumb monograph text",
+        "Not for motion sickness at this injectable dose"
       ],
-      "source": "2026 iCatCare consensus guidelines on CKD in cats (Taylor et al. JFMS 2026) Table 4 \u2014 maropitant 1 mg/kg SC, IV or PO q24h. DOI 10.1177/1098612X261466553",
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). Dog inj 1 mg/kg SC (\u00b1 IV); cat inj 1 mg/kg SC or IV q24h \u22645 days. Chemistry/Synonyms lists Cerenia\u00ae and Prevomax\u00ae.",
+      "sourceChecked": "2026-10-18"
+    },
+    {
+      "id": "maropitant-tablets-vomiting",
+      "name": "maropitant (tablets \u2014 vomiting)",
+      "shortName": "Maropitant",
+      "brandNames": [
+        "Cerenia"
+      ],
+      "species": [
+        "dog"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 2,
+        "max": 2
+      },
+      "frequency": "SID",
+      "form": "tablet",
+      "tabletStrengthMg": [
+        16,
+        24
+      ],
+      "notes": [
+        "Dogs: prevention of acute vomiting \u2014 2 mg/kg PO once daily (SID)",
+        "PO dose higher than SC because of lower oral bioavailability (Plumb)",
+        "Hospital tablet strengths: 16 mg and 24 mg (product stock \u2014 not listed in Plumb monograph text)",
+        "Not the motion-sickness regimen (8 mg/kg)"
+      ],
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). Prevention of acute vomiting \u2014 Tablets \u2014 2 mg/kg PO once daily.",
+      "sourceChecked": "2026-10-18"
+    },
+    {
+      "id": "maropitant-tablets-motion",
+      "name": "maropitant (tablets \u2014 motion sickness)",
+      "shortName": "Maropitant",
+      "brandNames": [
+        "Cerenia"
+      ],
+      "species": [
+        "dog"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 8,
+        "max": 8
+      },
+      "frequency": "SID",
+      "form": "tablet",
+      "tabletStrengthMg": [
+        16,
+        24
+      ],
+      "notes": [
+        "Dogs: prevention of vomiting due to motion sickness \u2014 8 mg/kg PO once daily (SID)",
+        "Up to 2 consecutive days (Plumb)",
+        "Give on empty stomach or with a small amount of food; do not feed a full meal prior to travel (Plumb client info)",
+        "Do not use injectable 1 mg/kg interchangeably for motion sickness",
+        "Hospital tablet strengths: 16 mg and 24 mg (product stock)"
+      ],
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). Prevention of vomiting due to motion sickness \u2014 Tablets \u2014 8 mg/kg PO once daily up to 2 consecutive days.",
       "sourceChecked": "2026-10-18"
     },
     {
       "id": "maropitant-po-cat",
-      "name": "maropitant (tablets / PO)",
+      "name": "maropitant (tablets / PO \u2014 cat)",
       "shortName": "Maropitant",
       "brandNames": [
         "Cerenia"
@@ -57,12 +127,13 @@
         24
       ],
       "notes": [
-        "1 mg/kg PO q24h (SID) for nausea/vomiting \u2014 iCatCare Table 4",
-        "OFF-LABEL vs Cerenia tablets (dog-only oral licence); injectable is labelled for cats",
-        "Using 16/24 mg dog tablets in cats is extra-label \u2014 score carefully; small cats may need compounding",
-        "Guideline cites Quimby oral CKD trial (~4 mg/cat/day, median ~1.1 mg/kg)"
+        "Cats: prevention of vomiting, including motion sickness (extra-label) \u2014 1 mg/kg SC or PO (Plumb)",
+        "OFF-LABEL relative to Cerenia tablets (dog-only oral licence); injectable is labelled for cats",
+        "Do not conflate with Plumb CKD line of 4 mg/cat (NOT mg/kg) PO q24h",
+        "Hospital tablet strengths: 16 mg and 24 mg (product stock) \u2014 score carefully in small cats",
+        "Also consistent with iCatCare CKD 2026 Table 4: 1 mg/kg SC, IV or PO q24h"
       ],
-      "source": "2026 iCatCare consensus guidelines on CKD in cats (Taylor et al. JFMS 2026) Table 4 \u2014 maropitant 1 mg/kg SC, IV or PO q24h. DOI 10.1177/1098612X261466553",
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). CATS \u2014 Prevention of vomiting, including from motion sickness (extra-label): 1 mg/kg SC or PO. Optional concordant: iCatCare CKD 2026 Table 4 (1 mg/kg SC, IV or PO q24h).",
       "sourceChecked": "2026-10-18"
     }
   ]
