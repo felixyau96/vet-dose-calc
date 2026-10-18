@@ -624,7 +624,7 @@
     if (needsWeight && (!Number.isFinite(w) || w <= 0)) {
       const card = document.createElement("div");
       card.className = "dose-card";
-      card.innerHTML = '<div class="label">Dose</div><div class="value">Enter weight</div><div class="hint">kg required to calculate</div>';
+      card.innerHTML = '<div class="label">Amount</div><div class="value">Enter weight</div><div class="hint">kg required to calculate</div>';
       gridEl.appendChild(card);
       return;
     }
@@ -632,45 +632,78 @@
     if (!range) {
       const card = document.createElement("div");
       card.className = "dose-card";
-      card.innerHTML = '<div class="label">Dose</div><div class="value">Unavailable</div><div class="hint">Missing doseUnit/dosePerKg (or legacy) or fixedTotal</div>';
+      card.innerHTML = '<div class="label">Amount</div><div class="value">Unavailable</div><div class="hint">Missing doseUnit/dosePerKg (or legacy) or fixedTotal</div>';
       gridEl.appendChild(card);
       return;
     }
-    const unitLabel = range.unit === "U" ? "units" : range.unit;
-    const same = Math.abs(range.minDose - range.maxDose) < 1e-9;
-    const doseCard = document.createElement("div");
-    doseCard.className = "dose-card";
-    const doseVal = same
-      ? fmtNum(range.minDose) + " " + unitLabel
-      : fmtNum(range.minDose) + " – " + fmtNum(range.maxDose) + " " + unitLabel;
-    if (range.fixed) {
-      doseCard.innerHTML =
-        '<div class="label">Fixed total dose (' + unitLabel + ')</div><div class="value">' + doseVal + "</div>" +
-        '<div class="hint">fixed dose (not per kg)' +
-        (range.fixedNote && range.fixedNote !== "fixed dose (not per kg)" ? " — " + range.fixedNote : "") +
-        "</div>";
-    } else {
-      doseCard.innerHTML =
-        '<div class="label">Calculated dose (' + unitLabel + ')</div><div class="value">' + doseVal + "</div>" +
-        '<div class="hint">' + fmtNum(range.perKgMin) +
+
+    const tabletMode = isTabletForm(drug) && (drug.tabletStrengthMg || []).length > 0;
+    const liquidMode = !tabletMode && (
+      isLiquidOrInj(drug) ||
+      (drug.concentrationMgPerMl != null && Number(drug.concentrationMgPerMl) > 0)
+    );
+
+    // Hint line: regimen only (mg/kg × wt) — not the primary amount
+    function regimenHint() {
+      if (range.fixed) {
+        return "fixed dose (not per kg)" +
+          (range.fixedNote && range.fixedNote !== "fixed dose (not per kg)" ? " — " + range.fixedNote : "");
+      }
+      const unitLabel = range.unit === "U" ? "units" : range.unit;
+      const same = Math.abs(range.perKgMin - range.perKgMax) < 1e-9;
+      return fmtNum(range.perKgMin) +
         (same ? "" : "–" + fmtNum(range.perKgMax)) +
-        " " + unitLabel + "/kg × " + fmtNum(w, 2) + " kg</div>";
+        " " + unitLabel + "/kg × " + fmtNum(w, 2) + " kg";
     }
-    gridEl.appendChild(doseCard);
-    if (range.unit === "mcg") {
-      const note = document.createElement("div");
-      note.className = "mcg-note";
-      note.textContent = "Dose labelled in mcg (source is mcg/kg).";
-      gridEl.appendChild(note);
+
+    if (tabletMode) {
+      const minMg = range.unit === "mcg" ? range.minDose / 1000 : range.minDose;
+      const maxMg = range.unit === "mcg" ? range.maxDose / 1000 : range.maxDose;
+      const midMg = (minMg + maxMg) / 2;
+      const suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
+      const tabCard = document.createElement("div");
+      tabCard.className = "dose-card";
+      if (!suggestions.length) {
+        tabCard.innerHTML =
+          '<div class="label">Tablets</div><div class="value">—</div>' +
+          '<div class="hint">No usable tablet strengths · ' + regimenHint() + "</div>";
+        gridEl.appendChild(tabCard);
+        return;
+      }
+      const best = suggestions[0];
+      const tabWord = best.tablets === 1 ? "tab" : "tab";
+      const primary =
+        fmtNum(best.tablets) + " " + tabWord + " of " + fmtNum(best.strength) + " mg";
+      var html =
+        '<div class="label">Give</div><div class="value">' + primary + "</div>" +
+        '<div class="hint">' + regimenHint() + "</div>";
+      const alts = suggestions.slice(1, 4);
+      if (alts.length) {
+        html += '<ul class="tablet-options">';
+        alts.forEach(function (s) {
+          html += "<li>" + fmtNum(s.tablets) + " tab of " + fmtNum(s.strength) + " mg</li>";
+        });
+        html += "</ul>";
+        html += '<p class="tablet-note">Nearest whole/half tablets. Confirm clinically.</p>';
+      } else {
+        html += '<p class="tablet-note">Nearest whole/half tablet. Confirm clinically.</p>';
+      }
+      tabCard.innerHTML = html;
+      gridEl.appendChild(tabCard);
+      return;
     }
-    if (range.unit === "U" && !range.fixed) {
-      const note = document.createElement("div");
-      note.className = "mcg-note";
-      note.textContent = "Dose labelled in units (U).";
-      gridEl.appendChild(note);
-    }
-    const conc = drug.concentrationMgPerMl;
-    if (conc != null && Number(conc) > 0 && (range.unit === "mg" || range.unit === "mcg")) {
+
+    if (liquidMode) {
+      const conc = drug.concentrationMgPerMl;
+      const card = document.createElement("div");
+      card.className = "dose-card";
+      if (conc == null || !(Number(conc) > 0) || !(range.unit === "mg" || range.unit === "mcg")) {
+        card.innerHTML =
+          '<div class="label">Volume</div><div class="value">—</div>' +
+          '<div class="hint">No concentration (mg/ml) in formulary · ' + regimenHint() + "</div>";
+        gridEl.appendChild(card);
+        return;
+      }
       const c = Number(conc);
       var volMin, volMax;
       if (range.unit === "mcg") {
@@ -681,48 +714,29 @@
         volMax = range.maxDose / c;
       }
       const volSame = Math.abs(volMin - volMax) < 1e-12;
-      const volCard = document.createElement("div");
-      volCard.className = "dose-card";
       const volVal = volSame
-        ? fmtNum(volMin, 3) + " ml"
-        : fmtNum(volMin, 3) + " – " + fmtNum(volMax, 3) + " ml";
-      volCard.innerHTML =
-        '<div class="label">Volume</div><div class="value">' + volVal + "</div>" +
-        '<div class="hint">at ' + fmtNum(c) + " mg/ml" +
+        ? fmtNum(volMin, 3) + " mL"
+        : fmtNum(volMin, 3) + " – " + fmtNum(volMax, 3) + " mL";
+      card.innerHTML =
+        '<div class="label">Give</div><div class="value">' + volVal + "</div>" +
+        '<div class="hint">at ' + fmtNum(c) + " mg/mL · " + regimenHint() +
         (range.unit === "mcg" ? " (mcg→mg ÷1000)" : "") + "</div>";
-      gridEl.appendChild(volCard);
+      gridEl.appendChild(card);
+      return;
     }
-    const strengths = drug.tabletStrengthMg || [];
-    if (strengths.length && (range.unit === "mg" || range.unit === "mcg")) {
-      const minMg = range.unit === "mcg" ? range.minDose / 1000 : range.minDose;
-      const maxMg = range.unit === "mcg" ? range.maxDose / 1000 : range.maxDose;
-      const midMg = (minMg + maxMg) / 2;
-      const suggestions = tabletSuggestions(midMg, strengths);
-      const tabCard = document.createElement("div");
-      tabCard.className = "dose-card";
-      var html = '<div class="label">Tablet options</div>';
-      if (!suggestions.length) {
-        html += '<div class="value">—</div><div class="hint">No usable tablet strengths</div>';
-      } else {
-        html += '<ul class="tablet-options">';
-        suggestions.slice(0, 4).forEach(function (s) {
-          const tabLabel = Number.isInteger(s.tablets)
-            ? s.tablets + (s.tablets === 1 ? " tablet" : " tablets")
-            : s.tablets + " tablets";
-          html += "<li><strong>" + tabLabel + "</strong> of " + fmtNum(s.strength) +
-            " mg ≈ " + fmtNum(s.actualMg) + " mg" +
-            (s.pct > 0.5 ? " (Δ " + fmtNum(s.pct, 1) + "%)" : "") + "</li>";
-        });
-        html += "</ul>";
-        html += '<p class="tablet-note">Nearest whole/half tablets vs mid-range dose (' +
-          fmtNum(midMg) + " mg). Confirm clinically.</p>";
-        if (range.unit === "mcg") {
-          html += '<p class="tablet-note">Dose converted from mcg to mg for tablet comparison.</p>';
-        }
-      }
-      tabCard.innerHTML = html;
-      gridEl.appendChild(tabCard);
-    }
+
+    // Fallback (e.g. units without conc/tablets, or fixed totals): show ultimate total in source unit only if no better form
+    const unitLabel = range.unit === "U" ? "units" : range.unit;
+    const same = Math.abs(range.minDose - range.maxDose) < 1e-9;
+    const doseVal = same
+      ? fmtNum(range.minDose) + " " + unitLabel
+      : fmtNum(range.minDose) + " – " + fmtNum(range.maxDose) + " " + unitLabel;
+    const card = document.createElement("div");
+    card.className = "dose-card";
+    card.innerHTML =
+      '<div class="label">Give</div><div class="value">' + doseVal + "</div>" +
+      '<div class="hint">' + regimenHint() + " · no tablet/volume form</div>";
+    gridEl.appendChild(card);
   }
 
   function renderList() {
