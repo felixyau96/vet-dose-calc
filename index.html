@@ -216,6 +216,22 @@
       font-variant-numeric: tabular-nums; color: var(--ink);
     }
     .dose-card .hint { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .dose-card .value .conc-sep {
+      font-weight: 500; color: var(--muted); margin: 0 0.15rem;
+    }
+    .dose-card .value .conc-badge {
+      display: inline-block;
+      font-size: 0.85em;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      background: #fff;
+      border: 1.5px solid var(--accent);
+      border-radius: 999px;
+      padding: 0.1rem 0.55rem;
+      vertical-align: middle;
+      letter-spacing: -0.01em;
+    }
     .meta-row { margin-top: 0.7rem; font-size: 0.92rem; }
     .meta-row dt {
       font-size: 0.7rem; font-weight: 650; text-transform: uppercase;
@@ -717,9 +733,12 @@
       const volVal = volSame
         ? fmtNum(volMin, 3) + " mL"
         : fmtNum(volMin, 3) + " – " + fmtNum(volMax, 3) + " mL";
+      const concBadge =
+        '<span class="conc-sep">·</span> <span class="conc-badge">' +
+        fmtNum(c) + " mg/mL</span>";
       card.innerHTML =
-        '<div class="label">Give</div><div class="value">' + volVal + "</div>" +
-        '<div class="hint">at ' + fmtNum(c) + " mg/mL · " + regimenHint() +
+        '<div class="label">Give</div><div class="value">' + volVal + " " + concBadge + "</div>" +
+        '<div class="hint">' + regimenHint() +
         (range.unit === "mcg" ? " (mcg→mg ÷1000)" : "") + "</div>";
       gridEl.appendChild(card);
       return;
