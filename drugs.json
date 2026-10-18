@@ -1,1 +1,79 @@
-{"drugs":[]}
+{
+  "drugs": [
+    {
+      "id": "maropitant-injectable",
+      "name": "maropitant (injectable)",
+      "brandNames": [
+        "Prevomax",
+        "Cerenia injectable"
+      ],
+      "species": [
+        "dog",
+        "cat"
+      ],
+      "routes": [
+        "SC",
+        "IV"
+      ],
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 1,
+        "max": 1
+      },
+      "concentrationMgPerMl": 10,
+      "notes": "Once daily up to 5 consecutive days. Prevomax EU/UK: 1 mg/kg = 1 mL/10 kg SC or IV bolus (do not mix with other fluids). Give >1 h before trigger for prevention. NOT for motion sickness. Cerenia injectable (FDA): same 1 mg/kg SC/IV (\u22654 mo; dogs 2\u20134 mo SC only). Injectable must not be used interchangeably with tablets for motion sickness.",
+      "source": "Prevomax 10 mg/ml EU SPC / VMD UK SPC https://www.vmd.defra.gov.uk/productinformationdatabase/files/SPC_Documents/SPC_2116038.PDF ; FDA DailyMed CERENIA Injectable setid=6aeda328-97c9-4868-8ecb-b3a4dcdbc0a0",
+      "sourceChecked": "2026-10-18"
+    },
+    {
+      "id": "maropitant-tablets-vomiting",
+      "name": "maropitant (tablets \u2014 vomiting/chemo)",
+      "brandNames": [
+        "Cerenia"
+      ],
+      "species": [
+        "dog"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 2,
+        "max": 2
+      },
+      "tabletStrengthMg": [
+        16,
+        24
+      ],
+      "notes": "Dogs only (\u22658 wk EU). Acute vomiting / chemo nausea EXCEPT motion sickness: 2 mg/kg PO once daily (EU tablets up to 14 days). Hospital stock: 16 mg and 24 mg. Weight bands (vomiting): 16 mg \u2014 3.0\u20134.0 kg \u00bd; 4.1\u20138.0 kg 1. 24 mg \u2014 8.1\u201312.0 kg 1; 12.1\u201324.0 kg 2. Dogs <3 kg: correct dose not accurately achievable per 16 mg table. If actively vomiting, start injectable then switch.",
+      "source": "Cerenia 16/24/60/160 mg tablets EU/UK SPC & VMD QRD Jan 2025 https://www.vmd.defra.gov.uk/Productinformationdatabase/files/QRD_Documents/QRD-Auth_2243321.PDF",
+      "sourceChecked": "2026-10-18"
+    },
+    {
+      "id": "maropitant-tablets-motion",
+      "name": "maropitant (tablets \u2014 motion sickness)",
+      "brandNames": [
+        "Cerenia"
+      ],
+      "species": [
+        "dog"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 8,
+        "max": 8
+      },
+      "tabletStrengthMg": [
+        16,
+        24
+      ],
+      "notes": "Dogs only (\u226516 wk EU / \u22654 mo US). Prevention of motion-sickness vomiting: 8 mg/kg PO once daily, max 2 consecutive days. Give \u22651 h before travel (EU). NOT the injectable 1 mg/kg or tablet vomiting 2 mg/kg regimen. Injectable must not be used for motion sickness. Hospital stock strengths 16 mg and 24 mg (label also uses 60/160 mg for larger dogs).",
+      "source": "Cerenia tablets EU/UK SPC/QRD motion-sickness section https://www.vmd.defra.gov.uk/Productinformationdatabase/files/QRD_Documents/QRD-Auth_2243321.PDF ; Zoetis US / DailyMed Cerenia tablets",
+      "sourceChecked": "2026-10-18"
+    }
+  ]
+}
