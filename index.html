@@ -216,6 +216,23 @@
       font-variant-numeric: tabular-nums; color: var(--ink);
     }
     .dose-card .hint { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .dose-pick-row {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: 0.35rem 0.65rem; margin-top: 0.35rem;
+    }
+    .dose-pick-row > .hint { margin-top: 0; flex: 1 1 12rem; }
+    .dose-pick-wrap {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      flex: 0 0 auto;
+    }
+    .dose-pick-wrap input.dose-pick-input {
+      width: 4.75rem; min-height: 36px; padding: 0.3rem 0.45rem;
+      font-size: 0.95rem; font-variant-numeric: tabular-nums;
+    }
+    .dose-pick-unit {
+      font-size: 0.82rem; font-weight: 600; color: var(--muted);
+      white-space: nowrap;
+    }
     .dose-card .value .conc-sep {
       font-weight: 500; color: var(--muted); margin: 0 0.15rem;
     }
@@ -401,6 +418,7 @@
     routePick: {},
     strengthPick: {},
     freqPick: {},
+    dosePickPerKg: {},
     loadError: null,
   };
   const els = {
@@ -484,6 +502,7 @@
       delete state.routePick[id];
       delete state.strengthPick[id];
       delete state.freqPick[id];
+      delete state.dosePickPerKg[id];
     }
     renderList();
     renderResults();
@@ -495,6 +514,7 @@
     delete state.routePick[id];
     delete state.strengthPick[id];
     delete state.freqPick[id];
+    delete state.dosePickPerKg[id];
     renderList();
     renderResults();
   }
@@ -661,6 +681,66 @@
     return selectedFrequency(drug);
   }
 
+  /** Effective per-kg for Give / Best tablet / liquid mL / copy.
+   *  Override (dosePickPerKg) if set, clamped to band; else point dose; else midpoint.
+   *  Band follows selected frequencyOptions when present. */
+  function effectivePerKg(drug) {
+    var perKg = drug.dosePerKg;
+    var freqOpt = selectedFrequencyOption(drug);
+    if (freqOpt && freqOpt.dosePerKg) perKg = freqOpt.dosePerKg;
+    var unit = drug.doseUnit || "mg";
+    var min = null;
+    var max = null;
+    if (perKg && Number.isFinite(Number(perKg.min)) && Number.isFinite(Number(perKg.max))) {
+      min = Number(perKg.min);
+      max = Number(perKg.max);
+    } else {
+      var mcg = drug.doseMcgPerKg;
+      if (mcg && Number.isFinite(Number(mcg.min)) && Number.isFinite(Number(mcg.max))) {
+        min = Number(mcg.min);
+        max = Number(mcg.max);
+        unit = "mcg";
+      } else {
+        var mg = drug.doseMgPerKg;
+        if (mg && Number.isFinite(Number(mg.min)) && Number.isFinite(Number(mg.max))) {
+          min = Number(mg.min);
+          max = Number(mg.max);
+          unit = "mg";
+        }
+      }
+    }
+    if (min == null || max == null) return null;
+    if (unit === "U") unit = "U";
+    var hasRange = Math.abs(min - max) >= 1e-9;
+    var pick = state.dosePickPerKg[drug.id];
+    var perKgEff;
+    var fromPick = false;
+    if (pick != null && Number.isFinite(Number(pick))) {
+      perKgEff = Number(pick);
+      if (perKgEff < min) perKgEff = min;
+      if (perKgEff > max) perKgEff = max;
+      fromPick = true;
+    } else if (!hasRange) {
+      perKgEff = min;
+    } else {
+      perKgEff = (min + max) / 2;
+    }
+    return {
+      perKg: perKgEff,
+      min: min,
+      max: max,
+      unit: unit,
+      hasRange: hasRange,
+      fromPick: fromPick,
+    };
+  }
+
+  function perKgUnitLabel(unit) {
+    if (unit === "mcg") return "mcg/kg";
+    if (unit === "U") return "U/kg";
+    return "mg/kg";
+  }
+
   function buildCopyLine(drug, weightKg) {
     var name = shortDrugName(drug);
     var route = selectedRoute(drug) || "—";
@@ -671,9 +751,9 @@
       if (!range || !Number.isFinite(weightKg) || weightKg <= 0) {
         return name + " — enter weight — " + String(route).toUpperCase() + " " + freq;
       }
-      var minMg = range.unit === "mcg" ? range.minDose / 1000 : range.minDose;
-      var maxMg = range.unit === "mcg" ? range.maxDose / 1000 : range.maxDose;
-      var midMg = (minMg + maxMg) / 2;
+      var effT = effectivePerKg(drug);
+      var doseUnitAmt = effT ? effT.perKg * weightKg : (range.minDose + range.maxDose) / 2;
+      var midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
       var suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
       if (!suggestions.length) {
         return name + " — no tablet match — " + String(route).toUpperCase() + " " + freq;
@@ -683,14 +763,17 @@
       return name + " " + fmtNum(chosen.strength) + "mg " + tabStr + " " + String(route).toUpperCase() + " " + freq;
     }
 
-    // Liquid / injectable: Name Xmg/kg ROUTE FREQ
+    // Liquid / injectable: Name Xmg/kg ROUTE FREQ (typed override or point; else band label)
     if (range && !range.fixed && range.perKgMin != null) {
+      var effL = effectivePerKg(drug);
+      var unitLab = perKgUnitLabel(range.unit);
       var perKgStr;
-      if (Math.abs(range.perKgMin - range.perKgMax) < 1e-9) {
-        perKgStr = fmtNum(range.perKgMin) + (range.unit === "mcg" ? "mcg/kg" : range.unit === "U" ? "U/kg" : "mg/kg");
+      if (effL && (effL.fromPick || !effL.hasRange)) {
+        perKgStr = fmtNum(effL.perKg) + unitLab;
+      } else if (Math.abs(range.perKgMin - range.perKgMax) < 1e-9) {
+        perKgStr = fmtNum(range.perKgMin) + unitLab;
       } else {
-        perKgStr = fmtNum(range.perKgMin) + "–" + fmtNum(range.perKgMax) +
-          (range.unit === "mcg" ? "mcg/kg" : range.unit === "U" ? "U/kg" : "mg/kg");
+        perKgStr = fmtNum(range.perKgMin) + "–" + fmtNum(range.perKgMax) + unitLab;
       }
       return name + " " + perKgStr + " " + String(route).toUpperCase() + " " + freq;
     }
@@ -744,7 +827,7 @@
     );
 
     // Hint line: regimen only (mg/kg × wt) — not the primary amount
-    function regimenHint() {
+    function regimenHintText() {
       if (range.fixed) {
         return "fixed dose (not per kg)" +
           (range.fixedNote && range.fixedNote !== "fixed dose (not per kg)" ? " — " + range.fixedNote : "");
@@ -756,10 +839,75 @@
         " " + unitLabel + "/kg × " + fmtNum(w, 2) + " kg";
     }
 
+    /** Show desired mg/kg box only when effective band has min ≠ max. */
+    function mountRegimenHint(cardEl, extraSuffix) {
+      var slot = cardEl.querySelector('[data-role="regimen-hint"]');
+      if (!slot) return;
+      var text = regimenHintText() + (extraSuffix || "");
+      var showPick = !range.fixed && range.perKgMin != null &&
+        Math.abs(range.perKgMin - range.perKgMax) >= 1e-9;
+      if (!showPick) {
+        slot.textContent = text;
+        return;
+      }
+      var row = document.createElement("div");
+      row.className = "dose-pick-row";
+      var hint = document.createElement("div");
+      hint.className = "hint";
+      hint.textContent = text;
+      row.appendChild(hint);
+      var wrap = document.createElement("div");
+      wrap.className = "dose-pick-wrap";
+      var inp = document.createElement("input");
+      inp.type = "number";
+      inp.className = "dose-pick-input";
+      inp.step = "0.1";
+      inp.min = String(range.perKgMin);
+      inp.max = String(range.perKgMax);
+      inp.inputMode = "decimal";
+      var mid = (range.perKgMin + range.perKgMax) / 2;
+      var unitSuffix = perKgUnitLabel(range.unit);
+      inp.placeholder = fmtNum(mid);
+      inp.setAttribute("aria-label", "Desired dose " + unitSuffix);
+      var pick = state.dosePickPerKg[drug.id];
+      if (pick != null && Number.isFinite(Number(pick))) {
+        inp.value = String(Number(pick));
+      }
+      var unitLab = document.createElement("span");
+      unitLab.className = "dose-pick-unit";
+      unitLab.textContent = unitSuffix;
+      inp.addEventListener("input", function () {
+        var raw = inp.value.trim();
+        var v = parseFloat(raw);
+        if (raw === "" || !Number.isFinite(v)) {
+          delete state.dosePickPerKg[drug.id];
+        } else {
+          if (v < range.perKgMin) v = range.perKgMin;
+          if (v > range.perKgMax) v = range.perKgMax;
+          state.dosePickPerKg[drug.id] = v;
+        }
+        renderResults();
+        var card = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+        var again = card && card.querySelector("input.dose-pick-input");
+        if (again) {
+          again.focus();
+          try {
+            var len = again.value.length;
+            again.setSelectionRange(len, len);
+          } catch (e) { /* number inputs may not support selection */ }
+        }
+      });
+      wrap.appendChild(inp);
+      wrap.appendChild(unitLab);
+      row.appendChild(wrap);
+      slot.replaceWith(row);
+    }
+
+    var eff = effectivePerKg(drug);
+
     if (tabletMode) {
-      const minMg = range.unit === "mcg" ? range.minDose / 1000 : range.minDose;
-      const maxMg = range.unit === "mcg" ? range.maxDose / 1000 : range.maxDose;
-      const midMg = (minMg + maxMg) / 2;
+      var doseUnitAmt = eff ? eff.perKg * w : (range.minDose + range.maxDose) / 2;
+      const midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
       const strengths = drug.tabletStrengthMg || [];
       const suggestions = tabletSuggestions(midMg, strengths);
       const tabCard = document.createElement("div");
@@ -767,7 +915,10 @@
       if (!suggestions.length) {
         tabCard.innerHTML =
           '<div class="label">Tablets</div><div class="value">—</div>' +
-          '<div class="hint">No usable tablet strengths · ' + regimenHint() + "</div>";
+          '<div data-role="regimen-hint" class="hint"></div>';
+        mountRegimenHint(tabCard, "");
+        var h0 = tabCard.querySelector(".dose-pick-row > .hint, [data-role=\"regimen-hint\"]");
+        if (h0) h0.textContent = "No usable tablet strengths · " + regimenHintText();
         gridEl.appendChild(tabCard);
         return;
       }
@@ -777,7 +928,7 @@
         fmtNum(chosen.tablets) + " tab of " + fmtNum(chosen.strength) + " mg";
       var html =
         '<div class="label">Give</div><div class="value">' + primary + "</div>" +
-        '<div class="hint">' + regimenHint() + "</div>";
+        '<div data-role="regimen-hint" class="hint"></div>';
       if (strengths.length > 1) {
         html += '<div class="strength-chooser" data-role="strength-chooser"></div>';
       }
@@ -825,6 +976,7 @@
         });
         chooser.appendChild(wrap);
       }
+      mountRegimenHint(tabCard, "");
       gridEl.appendChild(tabCard);
       return;
     }
@@ -836,36 +988,48 @@
       if (conc == null || !(Number(conc) > 0) || !(range.unit === "mg" || range.unit === "mcg")) {
         card.innerHTML =
           '<div class="label">Volume</div><div class="value">—</div>' +
-          '<div class="hint">No concentration (mg/ml) in formulary · ' + regimenHint() + "</div>";
+          '<div data-role="regimen-hint" class="hint"></div>';
+        mountRegimenHint(card, "");
+        var hL = card.querySelector(".dose-pick-row > .hint, [data-role=\"regimen-hint\"]");
+        if (hL) hL.textContent = "No concentration (mg/ml) in formulary · " + regimenHintText();
         gridEl.appendChild(card);
         return;
       }
       const c = Number(conc);
-      var volMin, volMax;
+      var doseAmt = eff ? eff.perKg * w : (range.minDose + range.maxDose) / 2;
+      var vol;
       if (range.unit === "mcg") {
-        volMin = (range.minDose / 1000) / c;
-        volMax = (range.maxDose / 1000) / c;
+        vol = (doseAmt / 1000) / c;
       } else {
-        volMin = range.minDose / c;
-        volMax = range.maxDose / c;
+        vol = doseAmt / c;
       }
-      const volSame = Math.abs(volMin - volMax) < 1e-12;
-      const volVal = volSame
-        ? fmtNum(volMin, 3) + " mL"
-        : fmtNum(volMin, 3) + " – " + fmtNum(volMax, 3) + " mL";
+      const volVal = fmtNum(vol, 3) + " mL";
       const concBadge =
         '<span class="conc-sep">·</span> <span class="conc-badge">' +
         fmtNum(c) + " mg/mL</span>";
       card.innerHTML =
         '<div class="label">Give</div><div class="value">' + volVal + " " + concBadge + "</div>" +
-        '<div class="hint">' + regimenHint() +
-        (range.unit === "mcg" ? " (mcg→mg ÷1000)" : "") + "</div>";
+        '<div data-role="regimen-hint" class="hint"></div>';
+      mountRegimenHint(card, range.unit === "mcg" ? " (mcg→mg ÷1000)" : "");
       gridEl.appendChild(card);
       return;
     }
 
     // Fallback (e.g. units without conc/tablets, or fixed totals): show ultimate total in source unit only if no better form
     const unitLabel = range.unit === "U" ? "units" : range.unit;
+    var fallbackDose;
+    if (!range.fixed && eff) {
+      fallbackDose = eff.perKg * w;
+      const doseVal = fmtNum(fallbackDose) + " " + unitLabel;
+      const card = document.createElement("div");
+      card.className = "dose-card";
+      card.innerHTML =
+        '<div class="label">Give</div><div class="value">' + doseVal + "</div>" +
+        '<div data-role="regimen-hint" class="hint"></div>';
+      mountRegimenHint(card, " · no tablet/volume form");
+      gridEl.appendChild(card);
+      return;
+    }
     const same = Math.abs(range.minDose - range.maxDose) < 1e-9;
     const doseVal = same
       ? fmtNum(range.minDose) + " " + unitLabel
@@ -874,7 +1038,8 @@
     card.className = "dose-card";
     card.innerHTML =
       '<div class="label">Give</div><div class="value">' + doseVal + "</div>" +
-      '<div class="hint">' + regimenHint() + " · no tablet/volume form</div>";
+      '<div data-role="regimen-hint" class="hint"></div>';
+    mountRegimenHint(card, " · no tablet/volume form");
     gridEl.appendChild(card);
   }
 
@@ -1030,6 +1195,7 @@
             btn.addEventListener("click", function () {
               state.freqPick[id] = label;
               delete state.strengthPick[id];
+              delete state.dosePickPerKg[id];
               renderResults();
             });
             freqWrap.appendChild(btn);

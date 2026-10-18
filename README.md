@@ -25,7 +25,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 ## UI
 
 - **Left:** species, weight (kg), search, multi-select checklist of medications.
-- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the nearest whole/half/quarter-tab match is auto-selected and marked **Best**; other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg and re-runs Best tablet match.
+- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the nearest whole/half/quarter-tab match is auto-selected and marked **Best**; other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg and re-runs Best tablet match. When the **effective** per-kg band has min ≠ max (after any frequency option), a desired-dose number box appears next to the range so you can type mg/kg or mcg/kg; Give / Best tablet / volume / copy follow that value (clamped to the band). Point doses (including doxy BID/SID options) hide the box.
 - Notes render as a bullet list (`notes` string or `string[]`).
 
 ## Formulary file
@@ -64,7 +64,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 | Field | Notes |
 |-------|--------|
 | `doseUnit` | `"mg"`, `"mcg"`, or `"U"` (units) |
-| `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal` |
+| `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal`. When min ≠ max (and no point `frequencyOptions` override), UI offers a desired mg/kg (or mcg/kg) input |
 | `fixedTotal` | `{min,max,unit,note}` for fixed (not per-kg) totals |
 | `concentrationMgPerMl` | always **mg/ml**. For mcg doses: volume = (dose_mcg / 1000) / concentration |
 | `tabletStrengthMg` | tablet strengths in mg; UI auto-selects the nearest whole/half/quarter-tablet match (badge **Best**) and lets you pick another strength when several exist |
