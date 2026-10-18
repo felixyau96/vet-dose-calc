@@ -25,7 +25,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 ## UI
 
 - **Left:** species, weight (kg), search, multi-select checklist of medications.
-- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker (defaults to best match).
+- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the nearest whole/half-tab match is auto-selected and marked **Best**; other strengths stay selectable and drive Give amount + copy lines.
 - Notes render as a bullet list (`notes` string or `string[]`).
 
 ## Formulary file
@@ -63,7 +63,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 | `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal` |
 | `fixedTotal` | `{min,max,unit,note}` for fixed (not per-kg) totals |
 | `concentrationMgPerMl` | always **mg/ml**. For mcg doses: volume = (dose_mcg / 1000) / concentration |
-| `tabletStrengthMg` | tablet strengths in mg; UI defaults to best-match strength (nearest whole/half tablet) and lets you override when multiple strengths exist |
+| `tabletStrengthMg` | tablet strengths in mg; UI auto-selects the nearest whole/half-tablet match (badge **Best**) and lets you pick another strength when several exist |
 | `form` | optional `"tablet"` \| `"capsule"` \| `"injectable"` \| `"liquid"` — drives copy-line format |
 | `frequency` | optional short label for copy lines, e.g. `"SID"`, `"BID"` |
 | `notes` | string (newlines / `•` / `-` lines) **or** `string[]` (preferred) — shown as bullets |

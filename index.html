@@ -253,6 +253,27 @@
       background: var(--accent); border-color: var(--accent); color: #fff;
     }
     .strength-pick { text-transform: none; }
+    .strength-pick.best:not(.active) {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .strength-pick .best-badge {
+      display: inline-block;
+      margin-left: 0.35rem;
+      padding: 0.05rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      vertical-align: middle;
+      background: rgba(15, 76, 92, 0.12);
+      color: var(--accent);
+    }
+    .strength-pick.active .best-badge {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
     .notes-list {
       margin: 0.15rem 0 0; padding-left: 1.15rem;
       font-size: 0.9rem;
@@ -725,8 +746,9 @@
         (strengths.length > 1 ? " for the selected strength" : "") +
         ". Confirm clinically.</p>";
       if (strengths.length > 1 && Number(chosen.strength) !== Number(bestMatch.strength)) {
-        html += '<p class="tablet-note">Best match by dose: ' +
-          fmtNum(bestMatch.tablets) + " tab of " + fmtNum(bestMatch.strength) + " mg</p>";
+        html += '<p class="tablet-note">Closest whole/half match is ' +
+          fmtNum(bestMatch.tablets) + " tab of " + fmtNum(bestMatch.strength) +
+          " mg (marked Best).</p>";
       }
       tabCard.innerHTML = html;
       if (strengths.length > 1) {
@@ -743,9 +765,19 @@
         strengths.forEach(function (s) {
           var btn = document.createElement("button");
           btn.type = "button";
+          var isBest = Number(s) === Number(bestMatch.strength);
+          var isActive = Number(s) === Number(chosen.strength);
           btn.className = "strength-pick" +
-            (Number(s) === Number(chosen.strength) ? " active" : "");
-          btn.textContent = fmtNum(s) + " mg";
+            (isActive ? " active" : "") +
+            (isBest ? " best" : "");
+          btn.appendChild(document.createTextNode(fmtNum(s) + " mg"));
+          if (isBest) {
+            var badge = document.createElement("span");
+            badge.className = "best-badge";
+            badge.textContent = "Best";
+            btn.appendChild(badge);
+            btn.setAttribute("aria-label", fmtNum(s) + " mg, best match");
+          }
           btn.addEventListener("click", function () {
             state.strengthPick[drug.id] = Number(s);
             renderResults();
