@@ -25,7 +25,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 ## UI
 
 - **Left:** species, weight (kg), search, multi-select checklist of medications.
-- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the closest mg match is auto-selected and marked **Best**, preferring whole tablets over halves/quarters (then fewer tabs); other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg (and prefills the desired-dose box) and re-runs Best tablet match. A desired-dose number box appears when the **top-level** formulary `dosePerKg` has min ≠ max **or** the effective band (after frequency) has min ≠ max — so liquid/paste/injectable range drugs (e.g. doxycycline 5–10) keep the box even when BID/SID is a point dose. Typed values clamp to the top-level band when it is a range; clearing the box falls back to the selected frequency option’s dose (else midpoint). Point-only top-level doses (e.g. maropitant 1 mg/kg) hide the box.
+- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the closest mg match is auto-selected and marked **Best**, preferring whole tablets over halves/quarters (then fewer tabs); other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg (and prefills the desired-dose box on liquid/paste/injectable forms) and re-runs Best tablet match. A desired-dose number box appears for **liquid / injectable / paste only** (not tablet/capsule) when the **top-level** formulary `dosePerKg` has min ≠ max **or** the effective band (after frequency) has min ≠ max — e.g. doxycycline paste 5–10 keeps the box even when BID/SID is a point dose; doxycycline tablets keep Best strength only (no dose box). The box accepts/displays up to **2 decimal places** (step 0.01). Typed values clamp to the top-level band when it is a range; clearing the box falls back to the selected frequency option’s dose (else midpoint). Point-only top-level doses (e.g. maropitant 1 mg/kg) hide the box. Volume (Give card + copy-line mL): **&lt; 1 mL** up to 2 d.p.; **≥ 1 mL** up to 1 d.p. (trailing zeros trimmed).
 - Notes render as a bullet list (`notes` string or `string[]`).
 
 ## Formulary file
@@ -64,7 +64,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 | Field | Notes |
 |-------|--------|
 | `doseUnit` | `"mg"`, `"mcg"`, or `"U"` (units) |
-| `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal`. Top-level min ≠ max (labelled formulary band) shows a desired mg/kg (or mcg/kg) input even if a selected `frequencyOptions` entry is a point dose; clamp uses this band |
+| `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal`. Top-level min ≠ max (labelled formulary band) shows a desired mg/kg (or mcg/kg) input on **liquid/injectable/paste** forms only (never tablets/capsules), even if a selected `frequencyOptions` entry is a point dose; clamp uses this band; input up to 2 d.p. |
 | `fixedTotal` | `{min,max,unit,note}` for fixed (not per-kg) totals |
 | `concentrationMgPerMl` | always **mg/ml**. For mcg doses: volume = (dose_mcg / 1000) / concentration |
 | `tabletStrengthMg` | tablet strengths in mg; UI auto-selects Best match by lowest mg error, then whole > half > quarter tabs, then fewer tablets (badge **Best**); other strengths stay selectable |
@@ -78,7 +78,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 **Copy line formats**
 
 - Tablet/capsule: `Name StrengthMg mg Ntab ROUTE FREQ` (e.g. `Maropitant 16mg 0.5tab PO SID`)
-- Liquid/injectable: `Name Xmg/kg (volume mL) ROUTE FREQ` (e.g. `Maropitant 1mg/kg (0.4 mL) SC SID` for 4 kg at 10 mg/mL)
+- Liquid/injectable: `Name Xmg/kg (volume mL) ROUTE FREQ` (e.g. `Maropitant 1mg/kg (0.4 mL) SC SID` for 4 kg at 10 mg/mL). Volume decimals: &lt;1 mL up to 2 d.p.; ≥1 mL up to 1 d.p.
 
 Calculator prefers `doseUnit` + `dosePerKg`; falls back to legacy `doseMgPerKg` / `doseMcgPerKg`.
 
