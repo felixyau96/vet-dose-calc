@@ -423,7 +423,7 @@
     const d = maxDec == null ? 3 : maxDec;
     return String(Number(n.toFixed(d)));
   }
-  function roundHalf(n) { return Math.round(n * 2) / 2; }
+  function roundQuarter(n) { return Math.round(n * 4) / 4; }
 
   function tabletSuggestions(doseMg, strengths) {
     if (!strengths || !strengths.length || !Number.isFinite(doseMg) || doseMg <= 0) return [];
@@ -431,14 +431,14 @@
     for (const strength of strengths) {
       if (!strength || strength <= 0) continue;
       const exact = doseMg / strength;
-      const nearest = roundHalf(exact);
+      const nearest = roundQuarter(exact);
       if (nearest <= 0) continue;
       const actualMg = nearest * strength;
       const diff = Math.abs(actualMg - doseMg);
       const pct = doseMg > 0 ? (diff / doseMg) * 100 : 0;
       out.push({ strength: strength, tablets: nearest, actualMg: actualMg, diff: diff, pct: pct });
     }
-    out.sort(function (a, b) { return a.diff - b.diff || a.strength - b.strength; });
+    out.sort(function (a, b) { return a.diff - b.diff || a.tablets - b.tablets || b.strength - a.strength; });
     return out;
   }
 
@@ -742,11 +742,11 @@
       if (strengths.length > 1) {
         html += '<div class="strength-chooser" data-role="strength-chooser"></div>';
       }
-      html += '<p class="tablet-note">Nearest whole/half tablet' +
+      html += '<p class="tablet-note">Nearest whole/half/quarter tablet' +
         (strengths.length > 1 ? " for the selected strength" : "") +
         ". Confirm clinically.</p>";
       if (strengths.length > 1 && Number(chosen.strength) !== Number(bestMatch.strength)) {
-        html += '<p class="tablet-note">Closest whole/half match is ' +
+        html += '<p class="tablet-note">Closest whole/half/quarter match is ' +
           fmtNum(bestMatch.tablets) + " tab of " + fmtNum(bestMatch.strength) +
           " mg (marked Best).</p>";
       }
