@@ -238,20 +238,21 @@
       letter-spacing: 0.04em; color: var(--muted); margin: 0.55rem 0 0.15rem;
     }
     .meta-row dd { margin: 0; }
-    .route-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .pill, .route-pick {
+    .route-pills, .strength-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .pill, .route-pick, .strength-pick {
       display: inline-block; background: #fff; border: 1px solid var(--border);
       border-radius: 999px; padding: 0.25rem 0.65rem;
       font-size: 0.82rem; font-weight: 600; text-transform: uppercase;
       cursor: default;
     }
-    button.route-pick {
+    button.route-pick, button.strength-pick {
       cursor: pointer; font-family: inherit;
       -webkit-tap-highlight-color: transparent;
     }
-    button.route-pick.active {
+    button.route-pick.active, button.strength-pick.active {
       background: var(--accent); border-color: var(--accent); color: #fff;
     }
+    .strength-pick { text-transform: none; }
     .notes-list {
       margin: 0.15rem 0 0; padding-left: 1.15rem;
       font-size: 0.9rem;
@@ -377,6 +378,7 @@
     drugs: [],
     selectedIds: [],
     routePick: {},
+    strengthPick: {},
     loadError: null,
   };
   const els = {
@@ -458,6 +460,7 @@
     else {
       state.selectedIds.splice(i, 1);
       delete state.routePick[id];
+      delete state.strengthPick[id];
     }
     renderList();
     renderResults();
@@ -467,6 +470,7 @@
     const i = state.selectedIds.indexOf(id);
     if (i !== -1) state.selectedIds.splice(i, 1);
     delete state.routePick[id];
+    delete state.strengthPick[id];
     renderList();
     renderResults();
   }
@@ -573,6 +577,26 @@
     return String(routes[0]);
   }
 
+  /** Resolve tablet suggestion: user override if valid, else best-match (suggestions[0]). */
+  function selectedTabletSuggestion(drug, suggestions) {
+    if (!suggestions || !suggestions.length) return null;
+    var strengths = drug.tabletStrengthMg || [];
+    var pick = state.strengthPick[drug.id];
+    if (pick != null && Number.isFinite(Number(pick))) {
+      var p = Number(pick);
+      var ok = false;
+      for (var i = 0; i < strengths.length; i++) {
+        if (Number(strengths[i]) === p) { ok = true; break; }
+      }
+      if (ok) {
+        for (var j = 0; j < suggestions.length; j++) {
+          if (Number(suggestions[j].strength) === p) return suggestions[j];
+        }
+      }
+    }
+    return suggestions[0];
+  }
+
   function frequencyOf(drug) {
     return String(drug.frequency || "SID").toUpperCase();
   }
@@ -594,9 +618,9 @@
       if (!suggestions.length) {
         return name + " — no tablet match — " + String(route).toUpperCase() + " " + freq;
       }
-      var best = suggestions[0];
-      var tabStr = String(best.tablets) + "tab";
-      return name + " " + fmtNum(best.strength) + "mg " + tabStr + " " + String(route).toUpperCase() + " " + freq;
+      var chosen = selectedTabletSuggestion(drug, suggestions);
+      var tabStr = String(chosen.tablets) + "tab";
+      return name + " " + fmtNum(chosen.strength) + "mg " + tabStr + " " + String(route).toUpperCase() + " " + freq;
     }
 
     // Liquid / injectable: Name Xmg/kg ROUTE FREQ
@@ -676,7 +700,8 @@
       const minMg = range.unit === "mcg" ? range.minDose / 1000 : range.minDose;
       const maxMg = range.unit === "mcg" ? range.maxDose / 1000 : range.maxDose;
       const midMg = (minMg + maxMg) / 2;
-      const suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
+      const strengths = drug.tabletStrengthMg || [];
+      const suggestions = tabletSuggestions(midMg, strengths);
       const tabCard = document.createElement("div");
       tabCard.className = "dose-card";
       if (!suggestions.length) {
@@ -686,25 +711,49 @@
         gridEl.appendChild(tabCard);
         return;
       }
-      const best = suggestions[0];
-      const tabWord = best.tablets === 1 ? "tab" : "tab";
+      const chosen = selectedTabletSuggestion(drug, suggestions);
+      const bestMatch = suggestions[0];
       const primary =
-        fmtNum(best.tablets) + " " + tabWord + " of " + fmtNum(best.strength) + " mg";
+        fmtNum(chosen.tablets) + " tab of " + fmtNum(chosen.strength) + " mg";
       var html =
         '<div class="label">Give</div><div class="value">' + primary + "</div>" +
         '<div class="hint">' + regimenHint() + "</div>";
-      const alts = suggestions.slice(1, 4);
-      if (alts.length) {
-        html += '<ul class="tablet-options">';
-        alts.forEach(function (s) {
-          html += "<li>" + fmtNum(s.tablets) + " tab of " + fmtNum(s.strength) + " mg</li>";
-        });
-        html += "</ul>";
-        html += '<p class="tablet-note">Nearest whole/half tablets. Confirm clinically.</p>';
-      } else {
-        html += '<p class="tablet-note">Nearest whole/half tablet. Confirm clinically.</p>';
+      if (strengths.length > 1) {
+        html += '<div class="strength-chooser" data-role="strength-chooser"></div>';
+      }
+      html += '<p class="tablet-note">Nearest whole/half tablet' +
+        (strengths.length > 1 ? " for the selected strength" : "") +
+        ". Confirm clinically.</p>";
+      if (strengths.length > 1 && Number(chosen.strength) !== Number(bestMatch.strength)) {
+        html += '<p class="tablet-note">Best match by dose: ' +
+          fmtNum(bestMatch.tablets) + " tab of " + fmtNum(bestMatch.strength) + " mg</p>";
       }
       tabCard.innerHTML = html;
+      if (strengths.length > 1) {
+        var chooser = tabCard.querySelector('[data-role="strength-chooser"]');
+        var label = document.createElement("div");
+        label.className = "label";
+        label.style.marginTop = "0.45rem";
+        label.textContent = "Tablet strength";
+        chooser.appendChild(label);
+        var wrap = document.createElement("div");
+        wrap.className = "strength-pills";
+        wrap.setAttribute("role", "group");
+        wrap.setAttribute("aria-label", "Tablet strength");
+        strengths.forEach(function (s) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "strength-pick" +
+            (Number(s) === Number(chosen.strength) ? " active" : "");
+          btn.textContent = fmtNum(s) + " mg";
+          btn.addEventListener("click", function () {
+            state.strengthPick[drug.id] = Number(s);
+            renderResults();
+          });
+          wrap.appendChild(btn);
+        });
+        chooser.appendChild(wrap);
+      }
       gridEl.appendChild(tabCard);
       return;
     }
