@@ -444,6 +444,14 @@
   }
   function roundQuarter(n) { return Math.round(n * 4) / 4; }
 
+  function splitTier(tabs) {
+    var t = Number(tabs);
+    var r = Math.round(t * 4) / 4; // already quarter-rounded
+    if (Math.abs(r - Math.round(r)) < 1e-9) return 0; // whole
+    if (Math.abs(r * 2 - Math.round(r * 2)) < 1e-9) return 1; // half
+    return 2; // quarter
+  }
+
   function tabletSuggestions(doseMg, strengths) {
     if (!strengths || !strengths.length || !Number.isFinite(doseMg) || doseMg <= 0) return [];
     const out = [];
@@ -457,7 +465,12 @@
       const pct = doseMg > 0 ? (diff / doseMg) * 100 : 0;
       out.push({ strength: strength, tablets: nearest, actualMg: actualMg, diff: diff, pct: pct });
     }
-    out.sort(function (a, b) { return a.diff - b.diff || a.tablets - b.tablets || b.strength - a.strength; });
+    out.sort(function (a, b) {
+      return a.diff - b.diff
+        || splitTier(a.tablets) - splitTier(b.tablets)
+        || a.tablets - b.tablets
+        || b.strength - a.strength;
+    });
     return out;
   }
 
