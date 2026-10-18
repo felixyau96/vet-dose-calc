@@ -1,0 +1,4 @@
+.dose-calc-owner
+__pycache__/
+*.pyc
+.DS_Store

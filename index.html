@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f4c5c" />
+  <title>Dose Calc — Small Animal</title>
+  <style>
+    :root {
+      --bg: #f4f7f8;
+      --card: #ffffff;
+      --ink: #1a2b2f;
+      --muted: #5a6e74;
+      --accent: #0f4c5c;
+      --accent-soft: #e6f2f4;
+      --border: #d5e0e4;
+      --warn-bg: #fff3cd;
+      --warn-ink: #664d03;
+      --danger-bg: #fde8e8;
+      --radius: 12px;
+      --touch: 48px;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+      -webkit-text-size-adjust: 100%;
+    }
+    .disclaimer {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--warn-bg); color: var(--warn-ink);
+      text-align: center; font-size: 0.85rem; font-weight: 600;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid #e6d28a;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    header.app-header {
+      background: var(--accent); color: #fff;
+      padding: 1rem 1.25rem 1.15rem;
+    }
+    header.app-header h1 {
+      margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em;
+    }
+    header.app-header p {
+      margin: 0.25rem 0 0; font-size: 0.9rem; opacity: 0.9;
+    }
+    main { max-width: 560px; margin: 0 auto; padding: 1rem 1rem 2.5rem; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem; margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgba(15,76,92,0.04);
+    }
+    label.field-label {
+      display: block; font-size: 0.8rem; font-weight: 650;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--muted); margin-bottom: 0.4rem;
+    }
+    .species-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .species-toggle button {
+      min-height: var(--touch);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg); color: var(--ink);
+      font-size: 1.05rem; font-weight: 650; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .species-toggle button.active {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    .species-toggle button:focus-visible {
+      outline: 3px solid #7eb8c4; outline-offset: 2px;
+    }
+    input[type="search"], input[type="number"] {
+      width: 100%; min-height: var(--touch); font-size: 1.1rem;
+      padding: 0.6rem 0.85rem; border: 2px solid var(--border);
+      border-radius: 10px; background: #fff; color: var(--ink);
+    }
+    input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15,76,92,0.15);
+    }
+    .weight-row { display: flex; align-items: center; gap: 0.5rem; }
+    .weight-row input { flex: 1; }
+    .unit-badge {
+      flex-shrink: 0; font-weight: 700; color: var(--accent);
+      font-size: 1.05rem; padding: 0 0.25rem;
+    }
+    .drug-list {
+      list-style: none; margin: 0.75rem 0 0; padding: 0;
+      max-height: 280px; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: 10px; background: #fff;
+    }
+    .drug-list li button {
+      width: 100%; text-align: left; min-height: var(--touch);
+      padding: 0.7rem 0.9rem; border: none;
+      border-bottom: 1px solid var(--border);
+      background: transparent; font-size: 1rem; color: var(--ink);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .drug-list li:last-child button { border-bottom: none; }
+    .drug-list li button:hover,
+    .drug-list li button:focus-visible { background: var(--accent-soft); outline: none; }
+    .drug-list li button.selected {
+      background: var(--accent-soft); font-weight: 650;
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+    .drug-name { display: block; }
+    .drug-brands {
+      display: block; font-size: 0.85rem; color: var(--muted);
+      font-weight: 400; margin-top: 0.15rem;
+    }
+    .empty-state { text-align: center; padding: 2rem 1.25rem; color: var(--muted); }
+    .empty-state strong {
+      display: block; color: var(--ink); font-size: 1.1rem; margin-bottom: 0.5rem;
+    }
+    .result { display: none; }
+    .result.visible { display: block; }
+    .result h2 { margin: 0 0 0.75rem; font-size: 1.2rem; color: var(--accent); }
+    .dose-grid { display: grid; gap: 0.65rem; }
+    .dose-card {
+      background: var(--accent-soft); border-radius: 10px; padding: 0.85rem 1rem;
+    }
+    .dose-card .label {
+      font-size: 0.75rem; font-weight: 650; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--muted); margin-bottom: 0.2rem;
+    }
+    .dose-card .value {
+      font-size: 1.45rem; font-weight: 700;
+      font-variant-numeric: tabular-nums; color: var(--ink);
+    }
+    .dose-card .hint { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+    .meta-row { margin-top: 0.85rem; font-size: 0.95rem; }
+    .meta-row dt {
+      font-size: 0.75rem; font-weight: 650; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--muted); margin: 0.6rem 0 0.15rem;
+    }
+    .meta-row dd { margin: 0; }
+    .route-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .pill {
+      display: inline-block; background: #fff; border: 1px solid var(--border);
+      border-radius: 999px; padding: 0.25rem 0.65rem;
+      font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+    }
+    .source-box {
+      margin-top: 0.85rem; padding: 0.75rem 0.9rem; background: #fff;
+      border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; font-size: 0.9rem;
+    }
+    .source-box .src-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.2rem;
+    }
+    .tablet-options { margin: 0; padding-left: 1.1rem; }
+    .tablet-options li { margin: 0.25rem 0; }
+    .tablet-note { font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; }
+    .mcg-note {
+      margin-top: 0.65rem; padding: 0.55rem 0.75rem; background: var(--danger-bg);
+      border-radius: 8px; font-size: 0.85rem; color: #7a1f1f;
+    }
+    .status-msg { font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; min-height: 1.3em; }
+    .status-msg.error { color: #a11; font-weight: 600; }
+    footer {
+      text-align: center; font-size: 0.8rem; color: var(--muted);
+      padding: 0.5rem 1rem 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="disclaimer" role="note">
+    Verify against your formulary. Not a substitute for clinical judgment.
+  </div>
+  <header class="app-header">
+    <h1>Dose Calc</h1>
+    <p>Small animal · Dog &amp; Cat · kg only</p>
+  </header>
+  <main>
+    <section class="panel" aria-label="Species">
+      <label class="field-label" id="species-label">Species</label>
+      <div class="species-toggle" role="group" aria-labelledby="species-label">
+        <button type="button" id="btn-dog" class="active" data-species="dog" aria-pressed="true">Dog</button>
+        <button type="button" id="btn-cat" data-species="cat" aria-pressed="false">Cat</button>
+      </div>
+    </section>
+    <section class="panel" aria-label="Weight">
+      <label class="field-label" for="weight">Body weight</label>
+      <div class="weight-row">
+        <input type="number" id="weight" inputmode="decimal" min="0.1" step="0.1" placeholder="e.g. 4.5" />
+        <span class="unit-badge">kg</span>
+      </div>
+    </section>
+    <section class="panel" aria-label="Drug search">
+      <label class="field-label" for="search">Search medication</label>
+      <input type="search" id="search" placeholder="Name or brand…" autocomplete="off" enterkeyhint="search" />
+      <p class="status-msg" id="list-status" aria-live="polite"></p>
+      <ul class="drug-list" id="drug-list" hidden></ul>
+      <div class="empty-state" id="empty-state" hidden>
+        <strong>Formulary empty — paste hospital stock to Dose</strong>
+        Calculations appear only after drugs are added to <code>drugs.json</code>.
+      </div>
+    </section>
+    <section class="panel result" id="result" aria-live="polite">
+      <h2 id="result-title">—</h2>
+      <div class="dose-grid" id="dose-grid"></div>
+      <dl class="meta-row">
+        <dt>Route(s)</dt>
+        <dd><div class="route-pills" id="routes"></div></dd>
+        <dt id="notes-dt" hidden>Notes</dt>
+        <dd id="notes" hidden></dd>
+      </dl>
+      <div class="source-box" id="source-box">
+        <div class="src-label">Source</div>
+        <div id="source-text"></div>
+      </div>
+    </section>
+  </main>
+  <footer>Client-side only · Data from drugs.json · Felix / HK</footer>
+  <script>
+(function () {
+  "use strict";
+  const state = { species: "dog", drugs: [], selectedId: null, loadError: null };
+  const els = {
+    btnDog: document.getElementById("btn-dog"),
+    btnCat: document.getElementById("btn-cat"),
+    weight: document.getElementById("weight"),
+    search: document.getElementById("search"),
+    drugList: document.getElementById("drug-list"),
+    emptyState: document.getElementById("empty-state"),
+    listStatus: document.getElementById("list-status"),
+    result: document.getElementById("result"),
+    resultTitle: document.getElementById("result-title"),
+    doseGrid: document.getElementById("dose-grid"),
+    routes: document.getElementById("routes"),
+    notesDt: document.getElementById("notes-dt"),
+    notes: document.getElementById("notes"),
+    sourceText: document.getElementById("source-text"),
+  };
+  function fmtNum(n, maxDec) {
+    if (!Number.isFinite(n)) return "—";
+    const d = maxDec == null ? 3 : maxDec;
+    return String(Number(n.toFixed(d)));
+  }
+  function roundHalf(n) { return Math.round(n * 2) / 2; }
+  function tabletSuggestions(doseMg, strengths) {
+    if (!strengths || !strengths.length || !Number.isFinite(doseMg) || doseMg <= 0) return [];
+    const out = [];
+    for (const strength of strengths) {
+      if (!strength || strength <= 0) continue;
+      const exact = doseMg / strength;
+      const nearest = roundHalf(exact);
+      if (nearest <= 0) continue;
+      const actualMg = nearest * strength;
+      const diff = Math.abs(actualMg - doseMg);
+      const pct = doseMg > 0 ? (diff / doseMg) * 100 : 0;
+      out.push({ strength: strength, tablets: nearest, actualMg: actualMg, diff: diff, pct: pct });
+    }
+    out.sort(function (a, b) { return a.diff - b.diff || a.strength - b.strength; });
+    return out;
+  }
+  function normalizeDrugs(data) {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.drugs)) return data.drugs;
+    return [];
+  }
+  function filteredDrugs() {
+    const q = (els.search.value || "").trim().toLowerCase();
+    return state.drugs.filter(function (d) {
+      const sp = (d.species || []).map(function (s) { return String(s).toLowerCase(); });
+      if (sp.length && sp.indexOf(state.species) === -1) return false;
+      if (!q) return true;
+      const name = String(d.name || "").toLowerCase();
+      const brands = (d.brandNames || []).map(function (b) { return String(b).toLowerCase(); });
+      if (name.indexOf(q) !== -1) return true;
+      for (let i = 0; i < brands.length; i++) {
+        if (brands[i].indexOf(q) !== -1) return true;
+      }
+      return false;
+    });
+  }
+  function selectedDrug() {
+    if (!state.selectedId) return null;
+    for (let i = 0; i < state.drugs.length; i++) {
+      if (state.drugs[i].id === state.selectedId) return state.drugs[i];
+    }
+    return null;
+  }
+  /** Resolve dose path: doseMcgPerKg wins when present; else doseMgPerKg. */
+  function doseRange(drug, weightKg) {
+    if (!Number.isFinite(weightKg) || weightKg <= 0) return null;
+    const mcg = drug.doseMcgPerKg;
+    if (mcg && Number.isFinite(Number(mcg.min)) && Number.isFinite(Number(mcg.max))) {
+      return {
+        unit: "mcg",
+        perKgMin: Number(mcg.min),
+        perKgMax: Number(mcg.max),
+        minDose: Number(mcg.min) * weightKg,
+        maxDose: Number(mcg.max) * weightKg,
+      };
+    }
+    const mg = drug.doseMgPerKg;
+    if (mg && Number.isFinite(Number(mg.min)) && Number.isFinite(Number(mg.max))) {
+      return {
+        unit: "mg",
+        perKgMin: Number(mg.min),
+        perKgMax: Number(mg.max),
+        minDose: Number(mg.min) * weightKg,
+        maxDose: Number(mg.max) * weightKg,
+      };
+    }
+    return null;
+  }
+  function renderList() {
+    if (state.loadError) {
+      els.emptyState.hidden = true;
+      els.drugList.hidden = true;
+      els.listStatus.className = "status-msg error";
+      els.listStatus.textContent = state.loadError;
+      return;
+    }
+    if (!state.drugs.length) {
+      els.emptyState.hidden = false;
+      els.drugList.hidden = true;
+      els.listStatus.className = "status-msg";
+      els.listStatus.textContent = "";
+      return;
+    }
+    els.emptyState.hidden = true;
+    const list = filteredDrugs();
+    els.listStatus.className = "status-msg";
+    els.listStatus.textContent = list.length
+      ? list.length + " medication" + (list.length === 1 ? "" : "s")
+      : "No matches for this species / search.";
+    els.drugList.innerHTML = "";
+    if (!list.length) { els.drugList.hidden = true; return; }
+    els.drugList.hidden = false;
+    const frag = document.createDocumentFragment();
+    list.forEach(function (d) {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.id = d.id;
+      if (d.id === state.selectedId) btn.classList.add("selected");
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "drug-name";
+      nameSpan.textContent = d.name || d.id;
+      btn.appendChild(nameSpan);
+      if (d.brandNames && d.brandNames.length) {
+        const b = document.createElement("span");
+        b.className = "drug-brands";
+        b.textContent = d.brandNames.join(", ");
+        btn.appendChild(b);
+      }
+      btn.addEventListener("click", function () {
+        state.selectedId = d.id;
+        renderList();
+        renderResult();
+      });
+      li.appendChild(btn);
+      frag.appendChild(li);
+    });
+    els.drugList.appendChild(frag);
+  }
+  function renderResult() {
+    const drug = selectedDrug();
+    const w = parseFloat(els.weight.value);
+    if (!drug) { els.result.classList.remove("visible"); return; }
+    els.result.classList.add("visible");
+    els.resultTitle.textContent = drug.name || drug.id;
+    const routes = drug.routes || [];
+    els.routes.innerHTML = "";
+    if (routes.length) {
+      routes.forEach(function (r) {
+        const span = document.createElement("span");
+        span.className = "pill";
+        span.textContent = String(r).toUpperCase();
+        els.routes.appendChild(span);
+      });
+    } else { els.routes.textContent = "—"; }
+    if (drug.notes) {
+      els.notesDt.hidden = false; els.notes.hidden = false;
+      els.notes.textContent = drug.notes;
+    } else {
+      els.notesDt.hidden = true; els.notes.hidden = true; els.notes.textContent = "";
+    }
+    const src = drug.source || "(no source recorded in drugs.json)";
+    const checked = drug.sourceChecked ? " · checked " + drug.sourceChecked : "";
+    els.sourceText.textContent = src + checked;
+    els.doseGrid.innerHTML = "";
+    if (!Number.isFinite(w) || w <= 0) {
+      const card = document.createElement("div");
+      card.className = "dose-card";
+      card.innerHTML = '<div class="label">Dose</div><div class="value">Enter weight</div><div class="hint">kg required to calculate</div>';
+      els.doseGrid.appendChild(card);
+      return;
+    }
+    const range = doseRange(drug, w);
+    if (!range) {
+      const card = document.createElement("div");
+      card.className = "dose-card";
+      card.innerHTML = '<div class="label">Dose</div><div class="value">Unavailable</div><div class="hint">Missing doseMgPerKg or doseMcgPerKg</div>';
+      els.doseGrid.appendChild(card);
+      return;
+    }
+    const same = Math.abs(range.minDose - range.maxDose) < 1e-9;
+    const doseCard = document.createElement("div");
+    doseCard.className = "dose-card";
+    const doseVal = same
+      ? fmtNum(range.minDose) + " " + range.unit
+      : fmtNum(range.minDose) + " – " + fmtNum(range.maxDose) + " " + range.unit;
+    doseCard.innerHTML =
+      '<div class="label">Calculated dose (' + range.unit + ')</div><div class="value">' + doseVal + "</div>" +
+      '<div class="hint">' + fmtNum(range.perKgMin) +
+      (same ? "" : "–" + fmtNum(range.perKgMax)) +
+      " " + range.unit + "/kg × " + fmtNum(w, 2) + " kg</div>";
+    els.doseGrid.appendChild(doseCard);
+    if (range.unit === "mcg") {
+      const note = document.createElement("div");
+      note.className = "mcg-note";
+      note.textContent = "Dose labelled in mcg (source is mcg/kg).";
+      els.doseGrid.appendChild(note);
+    }
+    const conc = drug.concentrationMgPerMl;
+    if (conc != null && Number(conc) > 0) {
+      const c = Number(conc);
+      var volMin, volMax;
+      if (range.unit === "mcg") {
+        volMin = (range.minDose / 1000) / c;
+        volMax = (range.maxDose / 1000) / c;
+      } else {
+        volMin = range.minDose / c;
+        volMax = range.maxDose / c;
+      }
+      const volSame = Math.abs(volMin - volMax) < 1e-12;
+      const volCard = document.createElement("div");
+      volCard.className = "dose-card";
+      const volVal = volSame
+        ? fmtNum(volMin, 3) + " ml"
+        : fmtNum(volMin, 3) + " – " + fmtNum(volMax, 3) + " ml";
+      volCard.innerHTML =
+        '<div class="label">Volume</div><div class="value">' + volVal + "</div>" +
+        '<div class="hint">at ' + fmtNum(c) + " mg/ml" +
+        (range.unit === "mcg" ? " (mcg→mg ÷1000)" : "") + "</div>";
+      els.doseGrid.appendChild(volCard);
+    }
+    const strengths = drug.tabletStrengthMg || [];
+    if (strengths.length) {
+      const minMg = range.unit === "mcg" ? range.minDose / 1000 : range.minDose;
+      const maxMg = range.unit === "mcg" ? range.maxDose / 1000 : range.maxDose;
+      const midMg = (minMg + maxMg) / 2;
+      const suggestions = tabletSuggestions(midMg, strengths);
+      const tabCard = document.createElement("div");
+      tabCard.className = "dose-card";
+      var html = '<div class="label">Tablet options</div>';
+      if (!suggestions.length) {
+        html += '<div class="value">—</div><div class="hint">No usable tablet strengths</div>';
+      } else {
+        html += '<ul class="tablet-options">';
+        suggestions.slice(0, 4).forEach(function (s) {
+          const tabLabel = Number.isInteger(s.tablets)
+            ? s.tablets + (s.tablets === 1 ? " tablet" : " tablets")
+            : s.tablets + " tablets";
+          html += "<li><strong>" + tabLabel + "</strong> of " + fmtNum(s.strength) +
+            " mg ≈ " + fmtNum(s.actualMg) + " mg" +
+            (s.pct > 0.5 ? " (Δ " + fmtNum(s.pct, 1) + "%)" : "") + "</li>";
+        });
+        html += "</ul>";
+        html += '<p class="tablet-note">Nearest whole/half tablets vs mid-range dose (' +
+          fmtNum(midMg) + " mg). Confirm clinically.</p>";
+        if (range.unit === "mcg") {
+          html += '<p class="tablet-note">Dose converted from mcg to mg for tablet comparison.</p>';
+        }
+      }
+      tabCard.innerHTML = html;
+      els.doseGrid.appendChild(tabCard);
+    }
+  }
+  function setSpecies(sp) {
+    state.species = sp;
+    els.btnDog.classList.toggle("active", sp === "dog");
+    els.btnCat.classList.toggle("active", sp === "cat");
+    els.btnDog.setAttribute("aria-pressed", sp === "dog" ? "true" : "false");
+    els.btnCat.setAttribute("aria-pressed", sp === "cat" ? "true" : "false");
+    const sel = selectedDrug();
+    if (sel) {
+      const spList = (sel.species || []).map(function (s) { return String(s).toLowerCase(); });
+      if (spList.length && spList.indexOf(sp) === -1) state.selectedId = null;
+    }
+    renderList();
+    renderResult();
+  }
+  els.btnDog.addEventListener("click", function () { setSpecies("dog"); });
+  els.btnCat.addEventListener("click", function () { setSpecies("cat"); });
+  els.weight.addEventListener("input", renderResult);
+  els.search.addEventListener("input", renderList);
+  fetch("drugs.json", { cache: "no-store" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("Could not load drugs.json (" + r.status + ")");
+      return r.json();
+    })
+    .then(function (data) {
+      state.drugs = normalizeDrugs(data);
+      state.loadError = null;
+      renderList();
+      renderResult();
+    })
+    .catch(function (err) {
+      state.drugs = [];
+      state.loadError = "Failed to load formulary: " + (err && err.message ? err.message : String(err));
+      renderList();
+    });
+})();
+  </script>
+</body>
+</html>
