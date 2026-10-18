@@ -1,14 +1,14 @@
 {
   "drugs": [
     {
-      "id": "maropitant-injectable",
+      "id": "maropitant-injectable-cat",
       "name": "maropitant (injectable)",
+      "shortName": "Maropitant",
       "brandNames": [
         "Prevomax",
         "Cerenia injectable"
       ],
       "species": [
-        "dog",
         "cat"
       ],
       "routes": [
@@ -20,59 +20,49 @@
         "min": 1,
         "max": 1
       },
+      "frequency": "SID",
+      "form": "injectable",
       "concentrationMgPerMl": 10,
-      "notes": "Once daily up to 5 consecutive days. Prevomax EU/UK: 1 mg/kg = 1 mL/10 kg SC or IV bolus (do not mix with other fluids). Give >1 h before trigger for prevention. NOT for motion sickness. Cerenia injectable (FDA): same 1 mg/kg SC/IV (\u22654 mo; dogs 2\u20134 mo SC only). Injectable must not be used interchangeably with tablets for motion sickness.",
-      "source": "Prevomax 10 mg/ml EU SPC / VMD UK SPC https://www.vmd.defra.gov.uk/productinformationdatabase/files/SPC_Documents/SPC_2116038.PDF ; FDA DailyMed CERENIA Injectable setid=6aeda328-97c9-4868-8ecb-b3a4dcdbc0a0",
+      "notes": [
+        "1 mg/kg SC or IV once daily (SID)",
+        "Same table also lists 1 mg/kg PO q24h",
+        "SC may be painful (guideline adverse-effect note)",
+        "Hospital stock: Prevomax / Cerenia injectable 10 mg/mL"
+      ],
+      "source": "2026 iCatCare consensus guidelines on CKD in cats (Taylor et al. JFMS 2026) Table 4 \u2014 maropitant 1 mg/kg SC, IV or PO q24h. DOI 10.1177/1098612X261466553",
       "sourceChecked": "2026-10-18"
     },
     {
-      "id": "maropitant-tablets-vomiting",
-      "name": "maropitant (tablets \u2014 vomiting/chemo)",
+      "id": "maropitant-po-cat",
+      "name": "maropitant (tablets / PO)",
+      "shortName": "Maropitant",
       "brandNames": [
         "Cerenia"
       ],
       "species": [
-        "dog"
+        "cat"
       ],
       "routes": [
         "PO"
       ],
       "doseUnit": "mg",
       "dosePerKg": {
-        "min": 2,
-        "max": 2
+        "min": 1,
+        "max": 1
       },
+      "frequency": "SID",
+      "form": "tablet",
       "tabletStrengthMg": [
         16,
         24
       ],
-      "notes": "Dogs only (\u22658 wk EU). Acute vomiting / chemo nausea EXCEPT motion sickness: 2 mg/kg PO once daily (EU tablets up to 14 days). Hospital stock: 16 mg and 24 mg. Weight bands (vomiting): 16 mg \u2014 3.0\u20134.0 kg \u00bd; 4.1\u20138.0 kg 1. 24 mg \u2014 8.1\u201312.0 kg 1; 12.1\u201324.0 kg 2. Dogs <3 kg: correct dose not accurately achievable per 16 mg table. If actively vomiting, start injectable then switch.",
-      "source": "Cerenia 16/24/60/160 mg tablets EU/UK SPC & VMD QRD Jan 2025 https://www.vmd.defra.gov.uk/Productinformationdatabase/files/QRD_Documents/QRD-Auth_2243321.PDF",
-      "sourceChecked": "2026-10-18"
-    },
-    {
-      "id": "maropitant-tablets-motion",
-      "name": "maropitant (tablets \u2014 motion sickness)",
-      "brandNames": [
-        "Cerenia"
+      "notes": [
+        "1 mg/kg PO q24h (SID) for nausea/vomiting \u2014 iCatCare Table 4",
+        "OFF-LABEL vs Cerenia tablets (dog-only oral licence); injectable is labelled for cats",
+        "Using 16/24 mg dog tablets in cats is extra-label \u2014 score carefully; small cats may need compounding",
+        "Guideline cites Quimby oral CKD trial (~4 mg/cat/day, median ~1.1 mg/kg)"
       ],
-      "species": [
-        "dog"
-      ],
-      "routes": [
-        "PO"
-      ],
-      "doseUnit": "mg",
-      "dosePerKg": {
-        "min": 8,
-        "max": 8
-      },
-      "tabletStrengthMg": [
-        16,
-        24
-      ],
-      "notes": "Dogs only (\u226516 wk EU / \u22654 mo US). Prevention of motion-sickness vomiting: 8 mg/kg PO once daily, max 2 consecutive days. Give \u22651 h before travel (EU). NOT the injectable 1 mg/kg or tablet vomiting 2 mg/kg regimen. Injectable must not be used for motion sickness. Hospital stock strengths 16 mg and 24 mg (label also uses 60/160 mg for larger dogs).",
-      "source": "Cerenia tablets EU/UK SPC/QRD motion-sickness section https://www.vmd.defra.gov.uk/Productinformationdatabase/files/QRD_Documents/QRD-Auth_2243321.PDF ; Zoetis US / DailyMed Cerenia tablets",
+      "source": "2026 iCatCare consensus guidelines on CKD in cats (Taylor et al. JFMS 2026) Table 4 \u2014 maropitant 1 mg/kg SC, IV or PO q24h. DOI 10.1177/1098612X261466553",
       "sourceChecked": "2026-10-18"
     }
   ]
