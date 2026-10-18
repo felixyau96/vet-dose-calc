@@ -23,11 +23,13 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 
 ## Formulary file
 
-Live `drugs.json` must be:
+Live `drugs.json` shape:
 
 ```json
-{ "drugs": [] }
+{ "drugs": [ /* … */ ] }
 ```
+
+Public Pages: https://felixyau96.github.io/vet-dose-calc/
 
 ## Schema (each drug)
 
@@ -37,24 +39,28 @@ Live `drugs.json` must be:
   "name": "Example Drug",
   "brandNames": ["Brand A"],
   "species": ["dog", "cat"],
-  "routes": ["iv", "im", "sc", "po"],
+  "routes": ["IV", "IM", "SC", "PO"],
   "doseUnit": "mg",
   "dosePerKg": { "min": 1, "max": 2 },
+  "fixedTotal": null,
   "concentrationMgPerMl": 10,
   "tabletStrengthMg": [5, 10],
   "notes": "Optional clinical notes",
-  "source": "Exact citation, e.g. Plumb's 10th ed. p.123",
+  "source": "Exact citation",
   "sourceChecked": "2026-10-18"
 }
 ```
 
 | Field | Notes |
 |-------|--------|
-| `doseUnit` | `"mg"` or `"mcg"` only |
-| `dosePerKg` | min/max per kg in `doseUnit` |
+| `doseUnit` | `"mg"`, `"mcg"`, or `"U"` (units) |
+| `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal` |
+| `fixedTotal` | `{min,max,unit,note}` for fixed (not per-kg) totals; UI shows “fixed dose (not per kg)” |
 | `concentrationMgPerMl` | always **mg/ml**. For mcg doses: volume = (dose_mcg / 1000) / concentration |
 | `tabletStrengthMg` | tablet strengths in mg; UI suggests nearest whole/half tablets |
 | `source` | citation shown in the UI |
+
+Calculator prefers `doseUnit` + `dosePerKg`; falls back to legacy `doseMgPerKg` / `doseMcgPerKg`.
 
 After editing, refresh the browser.
 

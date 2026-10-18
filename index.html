@@ -288,13 +288,42 @@
     }
     return null;
   }
-  /** Resolve dose path: doseMcgPerKg wins when present; else doseMgPerKg. */
+  /** Resolve dose: doseUnit+dosePerKg primary; legacy doseMgPerKg/doseMcgPerKg fallback; fixedTotal when no per-kg. */
   function doseRange(drug, weightKg) {
+    const fixed = drug.fixedTotal;
+    const perKg = drug.dosePerKg;
+    const hasPerKg = perKg && Number.isFinite(Number(perKg.min)) && Number.isFinite(Number(perKg.max));
+    if (fixed && !hasPerKg) {
+      const unitRaw = (fixed.unit && String(fixed.unit).split("/")[0]) || drug.doseUnit || "mg";
+      const unit = unitRaw === "U" ? "U" : unitRaw;
+      return {
+        unit: unit,
+        fixed: true,
+        perKgMin: null,
+        perKgMax: null,
+        minDose: Number(fixed.min),
+        maxDose: Number(fixed.max),
+        fixedNote: fixed.note || "fixed dose (not per kg)",
+      };
+    }
     if (!Number.isFinite(weightKg) || weightKg <= 0) return null;
+    if (hasPerKg) {
+      var unit = drug.doseUnit || "mg";
+      if (unit === "U") unit = "U";
+      return {
+        unit: unit,
+        fixed: false,
+        perKgMin: Number(perKg.min),
+        perKgMax: Number(perKg.max),
+        minDose: Number(perKg.min) * weightKg,
+        maxDose: Number(perKg.max) * weightKg,
+      };
+    }
     const mcg = drug.doseMcgPerKg;
     if (mcg && Number.isFinite(Number(mcg.min)) && Number.isFinite(Number(mcg.max))) {
       return {
         unit: "mcg",
+        fixed: false,
         perKgMin: Number(mcg.min),
         perKgMax: Number(mcg.max),
         minDose: Number(mcg.min) * weightKg,
@@ -305,6 +334,7 @@
     if (mg && Number.isFinite(Number(mg.min)) && Number.isFinite(Number(mg.max))) {
       return {
         unit: "mg",
+        fixed: false,
         perKgMin: Number(mg.min),
         perKgMax: Number(mg.max),
         minDose: Number(mg.min) * weightKg,
@@ -390,7 +420,8 @@
     const checked = drug.sourceChecked ? " · checked " + drug.sourceChecked : "";
     els.sourceText.textContent = src + checked;
     els.doseGrid.innerHTML = "";
-    if (!Number.isFinite(w) || w <= 0) {
+    const needsWeight = !(drug.fixedTotal && !(drug.dosePerKg && Number.isFinite(Number(drug.dosePerKg.min)) && Number.isFinite(Number(drug.dosePerKg.max))));
+    if (needsWeight && (!Number.isFinite(w) || w <= 0)) {
       const card = document.createElement("div");
       card.className = "dose-card";
       card.innerHTML = '<div class="label">Dose</div><div class="value">Enter weight</div><div class="hint">kg required to calculate</div>';
@@ -401,21 +432,30 @@
     if (!range) {
       const card = document.createElement("div");
       card.className = "dose-card";
-      card.innerHTML = '<div class="label">Dose</div><div class="value">Unavailable</div><div class="hint">Missing doseMgPerKg or doseMcgPerKg</div>';
+      card.innerHTML = '<div class="label">Dose</div><div class="value">Unavailable</div><div class="hint">Missing doseUnit/dosePerKg (or legacy doseMgPerKg/doseMcgPerKg) or fixedTotal</div>';
       els.doseGrid.appendChild(card);
       return;
     }
+    const unitLabel = range.unit === "U" ? "units" : range.unit;
     const same = Math.abs(range.minDose - range.maxDose) < 1e-9;
     const doseCard = document.createElement("div");
     doseCard.className = "dose-card";
     const doseVal = same
-      ? fmtNum(range.minDose) + " " + range.unit
-      : fmtNum(range.minDose) + " – " + fmtNum(range.maxDose) + " " + range.unit;
-    doseCard.innerHTML =
-      '<div class="label">Calculated dose (' + range.unit + ')</div><div class="value">' + doseVal + "</div>" +
-      '<div class="hint">' + fmtNum(range.perKgMin) +
-      (same ? "" : "–" + fmtNum(range.perKgMax)) +
-      " " + range.unit + "/kg × " + fmtNum(w, 2) + " kg</div>";
+      ? fmtNum(range.minDose) + " " + unitLabel
+      : fmtNum(range.minDose) + " – " + fmtNum(range.maxDose) + " " + unitLabel;
+    if (range.fixed) {
+      doseCard.innerHTML =
+        '<div class="label">Fixed total dose (' + unitLabel + ')</div><div class="value">' + doseVal + "</div>" +
+        '<div class="hint">fixed dose (not per kg)' +
+        (range.fixedNote && range.fixedNote !== "fixed dose (not per kg)" ? " — " + range.fixedNote : "") +
+        "</div>";
+    } else {
+      doseCard.innerHTML =
+        '<div class="label">Calculated dose (' + unitLabel + ')</div><div class="value">' + doseVal + "</div>" +
+        '<div class="hint">' + fmtNum(range.perKgMin) +
+        (same ? "" : "–" + fmtNum(range.perKgMax)) +
+        " " + unitLabel + "/kg × " + fmtNum(w, 2) + " kg</div>";
+    }
     els.doseGrid.appendChild(doseCard);
     if (range.unit === "mcg") {
       const note = document.createElement("div");
@@ -423,8 +463,14 @@
       note.textContent = "Dose labelled in mcg (source is mcg/kg).";
       els.doseGrid.appendChild(note);
     }
+    if (range.unit === "U" && !range.fixed) {
+      const note = document.createElement("div");
+      note.className = "mcg-note";
+      note.textContent = "Dose labelled in units (U).";
+      els.doseGrid.appendChild(note);
+    }
     const conc = drug.concentrationMgPerMl;
-    if (conc != null && Number(conc) > 0) {
+    if (conc != null && Number(conc) > 0 && (range.unit === "mg" || range.unit === "mcg")) {
       const c = Number(conc);
       var volMin, volMax;
       if (range.unit === "mcg") {
@@ -447,7 +493,7 @@
       els.doseGrid.appendChild(volCard);
     }
     const strengths = drug.tabletStrengthMg || [];
-    if (strengths.length) {
+    if (strengths.length && (range.unit === "mg" || range.unit === "mcg")) {
       const minMg = range.unit === "mcg" ? range.minDose / 1000 : range.minDose;
       const maxMg = range.unit === "mcg" ? range.maxDose / 1000 : range.maxDose;
       const midMg = (minMg + maxMg) / 2;
