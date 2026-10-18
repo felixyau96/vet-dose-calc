@@ -135,6 +135,70 @@
       ],
       "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). CATS \u2014 Prevention of vomiting, including from motion sickness (extra-label): 1 mg/kg SC or PO. Optional concordant: iCatCare CKD 2026 Table 4 (1 mg/kg SC, IV or PO q24h).",
       "sourceChecked": "2026-10-18"
+    },
+    {
+      "id": "doxycycline-tablets",
+      "name": "doxycycline (tablets)",
+      "shortName": "Doxycycline",
+      "brandNames": [],
+      "species": [
+        "dog",
+        "cat"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 5,
+        "max": 10
+      },
+      "frequency": "5 mg/kg q12h OR 10 mg/kg q24h (choose one pattern)",
+      "form": "tablet",
+      "tabletStrengthMg": [
+        50,
+        100
+      ],
+      "notes": [
+        "Default (respiratory URI/CIRDC/bronchitis): 5 mg/kg PO q12h (BID) OR 10 mg/kg PO q24h (SID) \u2014 choose one pattern",
+        "UTI reserved only: 5 mg/kg PO q12h (not first-line; low urine excretion) \u2014 ISCAID UTI 2019",
+        "Canine pyoderma second-choice: same 5 mg/kg q12h OR 10 mg/kg q24h (dogs; after BC/AST) \u2014 ISCAID pyoderma 2025",
+        "Hyclate and monohydrate interchangeable at same mg/kg (ISCAID)",
+        "Cats: never dry-pill \u2014 follow tablets with water, pill treat, \u22652 mL liquid, or food (oesophageal stricture/ulceration risk)",
+        "OK in puppies/kittens >4 weeks without enamel discoloration (ISCAID respiratory Table 2)",
+        "Hospital tablet strengths: 50 mg and 100 mg (stock for calculator \u2014 not a dose source)"
+      ],
+      "source": "ISCAID Antimicrobial use Guidelines for Treatment of Respiratory Tract Disease in Dogs and Cats (Lappin et al. J Vet Intern Med 2017;31:279\u2013294) Table 2 \u2014 Doxycycline 5 mg/kg, PO, q12h Or 10 mg/kg, PO, q24h. DOI 10.1111/jvim.14627; PMC5354050. Supporting: ISCAID UTI 2019 (Weese et al. Vet J) 5 mg/kg PO q12h reserved; ISCAID canine pyoderma 2025 (Loeffler et al.) Table 15 second-choice same 5 q12h / 10 q24h (dogs). Plumb's 10th not verified in-hand for this entry.",
+      "sourceChecked": "2026-10-19"
+    },
+    {
+      "id": "doxycycline-paste",
+      "name": "doxycycline (paste)",
+      "shortName": "Doxycycline",
+      "brandNames": [],
+      "species": [
+        "dog",
+        "cat"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 5,
+        "max": 10
+      },
+      "frequency": "5 mg/kg q12h OR 10 mg/kg q24h (choose one pattern)",
+      "form": "liquid",
+      "concentrationMgPerMl": 100,
+      "notes": [
+        "Same mg/kg PO as tablets: 5 mg/kg q12h OR 10 mg/kg q24h (ISCAID respiratory Table 2)",
+        "Oral liquid/paste avoids dry-pilling solid tablets/capsules; still use the same mg/kg. Commercial hospital paste \u2260 compounded aqueous suspension (guideline advises against compounded aqueous doxycycline).",
+        "UTI reserved: 5 mg/kg PO q12h only when that indication applies",
+        "Hospital stock: 100 mg/mL paste, 2.5 mL tube (concentration for volume calc \u2014 not a dose source)"
+      ],
+      "source": "ISCAID Antimicrobial use Guidelines for Treatment of Respiratory Tract Disease in Dogs and Cats (Lappin et al. J Vet Intern Med 2017;31:279\u2013294) Table 2 \u2014 Doxycycline 5 mg/kg, PO, q12h Or 10 mg/kg, PO, q24h. DOI 10.1111/jvim.14627; PMC5354050. Same mg/kg for oral paste as tablets (guideline does not differentiate oral solid vs paste). Plumb's 10th not verified in-hand for this entry.",
+      "sourceChecked": "2026-10-19"
     }
   ]
 }
