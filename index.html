@@ -238,18 +238,18 @@
       letter-spacing: 0.04em; color: var(--muted); margin: 0.55rem 0 0.15rem;
     }
     .meta-row dd { margin: 0; }
-    .route-pills, .strength-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .pill, .route-pick, .strength-pick {
+    .route-pills, .strength-pills, .freq-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .pill, .route-pick, .strength-pick, .freq-pick {
       display: inline-block; background: #fff; border: 1px solid var(--border);
       border-radius: 999px; padding: 0.25rem 0.65rem;
       font-size: 0.82rem; font-weight: 600; text-transform: uppercase;
       cursor: default;
     }
-    button.route-pick, button.strength-pick {
+    button.route-pick, button.strength-pick, button.freq-pick {
       cursor: pointer; font-family: inherit;
       -webkit-tap-highlight-color: transparent;
     }
-    button.route-pick.active, button.strength-pick.active {
+    button.route-pick.active, button.strength-pick.active, button.freq-pick.active {
       background: var(--accent); border-color: var(--accent); color: #fff;
     }
     .strength-pick { text-transform: none; }
@@ -400,6 +400,7 @@
     selectedIds: [],
     routePick: {},
     strengthPick: {},
+    freqPick: {},
     loadError: null,
   };
   const els = {
@@ -482,6 +483,7 @@
       state.selectedIds.splice(i, 1);
       delete state.routePick[id];
       delete state.strengthPick[id];
+      delete state.freqPick[id];
     }
     renderList();
     renderResults();
@@ -492,14 +494,18 @@
     if (i !== -1) state.selectedIds.splice(i, 1);
     delete state.routePick[id];
     delete state.strengthPick[id];
+    delete state.freqPick[id];
     renderList();
     renderResults();
   }
 
-  /** Resolve dose: doseUnit+dosePerKg primary; legacy doseMgPerKg/doseMcgPerKg fallback; fixedTotal when no per-kg. */
+  /** Resolve dose: doseUnit+dosePerKg primary; legacy doseMgPerKg/doseMcgPerKg fallback; fixedTotal when no per-kg.
+   *  When frequencyOptions exist, calculations use the selected option's dosePerKg (not the top-level band mid). */
   function doseRange(drug, weightKg) {
     const fixed = drug.fixedTotal;
-    const perKg = drug.dosePerKg;
+    var perKg = drug.dosePerKg;
+    var freqOpt = selectedFrequencyOption(drug);
+    if (freqOpt && freqOpt.dosePerKg) perKg = freqOpt.dosePerKg;
     const hasPerKg = perKg && Number.isFinite(Number(perKg.min)) && Number.isFinite(Number(perKg.max));
     if (fixed && !hasPerKg) {
       const unitRaw = (fixed.unit && String(fixed.unit).split("/")[0]) || drug.doseUnit || "mg";
@@ -618,8 +624,41 @@
     return suggestions[0];
   }
 
+  function frequencyOptionsOf(drug) {
+    var opts = drug.frequencyOptions;
+    if (!Array.isArray(opts) || !opts.length) return null;
+    return opts;
+  }
+
+  /** Selected freq label (BID/SID). Override if valid, else drug.frequency if it matches an option, else first option. */
+  function selectedFrequency(drug) {
+    var opts = frequencyOptionsOf(drug);
+    if (!opts) return String(drug.frequency || "SID").toUpperCase();
+    var labels = [];
+    for (var i = 0; i < opts.length; i++) {
+      labels.push(String(opts[i].freq || "").toUpperCase());
+    }
+    var pick = state.freqPick[drug.id];
+    if (pick != null && labels.indexOf(String(pick).toUpperCase()) !== -1) {
+      return String(pick).toUpperCase();
+    }
+    var def = String(drug.frequency || "").toUpperCase();
+    if (def && labels.indexOf(def) !== -1) return def;
+    return labels[0] || "SID";
+  }
+
+  function selectedFrequencyOption(drug) {
+    var opts = frequencyOptionsOf(drug);
+    if (!opts) return null;
+    var sel = selectedFrequency(drug);
+    for (var i = 0; i < opts.length; i++) {
+      if (String(opts[i].freq || "").toUpperCase() === sel) return opts[i];
+    }
+    return opts[0];
+  }
+
   function frequencyOf(drug) {
-    return String(drug.frequency || "SID").toUpperCase();
+    return selectedFrequency(drug);
   }
 
   function buildCopyLine(drug, weightKg) {
@@ -969,11 +1008,36 @@
       dl.appendChild(dtR);
       dl.appendChild(ddR);
 
-      if (drug.frequency) {
+      var freqOpts = frequencyOptionsOf(drug);
+      var hasFreqPills = freqOpts && freqOpts.length >= 2;
+      if (hasFreqPills || drug.frequency) {
         const dtF = document.createElement("dt");
         dtF.textContent = "Frequency";
         const ddF = document.createElement("dd");
-        ddF.textContent = frequencyOf(drug);
+        if (hasFreqPills) {
+          var freqWrap = document.createElement("div");
+          freqWrap.className = "freq-pills";
+          freqWrap.setAttribute("role", "group");
+          freqWrap.setAttribute("aria-label", "Frequency");
+          var currentF = selectedFrequency(drug);
+          freqOpts.forEach(function (opt) {
+            var label = String(opt.freq || "").toUpperCase();
+            if (!label) return;
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "freq-pick" + (label === currentF ? " active" : "");
+            btn.textContent = label;
+            btn.addEventListener("click", function () {
+              state.freqPick[id] = label;
+              delete state.strengthPick[id];
+              renderResults();
+            });
+            freqWrap.appendChild(btn);
+          });
+          ddF.appendChild(freqWrap);
+        } else {
+          ddF.textContent = frequencyOf(drug);
+        }
         dl.appendChild(dtF);
         dl.appendChild(ddF);
       }

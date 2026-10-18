@@ -27,17 +27,17 @@
       "notes": [
         "1 mg/kg SC or IV once daily (SID), up to 5 consecutive days (Plumb label tables)",
         "Dogs: SC from 2 months; SC or IV from 4 months for acute vomiting",
-        "Cats (\u22654 months): label treatment of vomiting 1 mg/kg SC or IV SID \u22645 days",
-        "SC may be painful \u2014 refrigerating injectable may reduce pain (Plumb)",
-        "Hospital stock concentration: 10 mg/mL (Prevomax / Cerenia injectable) \u2014 product strength, not stated in Plumb monograph text",
+        "Cats (≥4 months): label treatment of vomiting 1 mg/kg SC or IV SID ≤5 days",
+        "SC may be painful — refrigerating injectable may reduce pain (Plumb)",
+        "Hospital stock concentration: 10 mg/mL (Prevomax / Cerenia injectable) — product strength, not stated in Plumb monograph text",
         "Not for motion sickness at this injectable dose"
       ],
-      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). Dog inj 1 mg/kg SC (\u00b1 IV); cat inj 1 mg/kg SC or IV q24h \u22645 days. Chemistry/Synonyms lists Cerenia\u00ae and Prevomax\u00ae.",
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition — Maropitant monograph pp. 799–801 (cats continue p. 802). Dog inj 1 mg/kg SC (± IV); cat inj 1 mg/kg SC or IV q24h ≤5 days. Chemistry/Synonyms lists Cerenia® and Prevomax®.",
       "sourceChecked": "2026-10-18"
     },
     {
       "id": "maropitant-tablets-vomiting",
-      "name": "maropitant (tablets \u2014 vomiting)",
+      "name": "maropitant (tablets — vomiting)",
       "shortName": "Maropitant",
       "brandNames": [
         "Cerenia"
@@ -60,17 +60,17 @@
         24
       ],
       "notes": [
-        "Dogs: prevention of acute vomiting \u2014 2 mg/kg PO once daily (SID)",
+        "Dogs: prevention of acute vomiting — 2 mg/kg PO once daily (SID)",
         "PO dose higher than SC because of lower oral bioavailability (Plumb)",
-        "Hospital tablet strengths: 16 mg and 24 mg (product stock \u2014 not listed in Plumb monograph text)",
+        "Hospital tablet strengths: 16 mg and 24 mg (product stock — not listed in Plumb monograph text)",
         "Not the motion-sickness regimen (8 mg/kg)"
       ],
-      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). Prevention of acute vomiting \u2014 Tablets \u2014 2 mg/kg PO once daily.",
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition — Maropitant monograph pp. 799–801 (cats continue p. 802). Prevention of acute vomiting — Tablets — 2 mg/kg PO once daily.",
       "sourceChecked": "2026-10-18"
     },
     {
       "id": "maropitant-tablets-motion",
-      "name": "maropitant (tablets \u2014 motion sickness)",
+      "name": "maropitant (tablets — motion sickness)",
       "shortName": "Maropitant",
       "brandNames": [
         "Cerenia"
@@ -93,18 +93,18 @@
         24
       ],
       "notes": [
-        "Dogs: prevention of vomiting due to motion sickness \u2014 8 mg/kg PO once daily (SID)",
+        "Dogs: prevention of vomiting due to motion sickness — 8 mg/kg PO once daily (SID)",
         "Up to 2 consecutive days (Plumb)",
         "Give on empty stomach or with a small amount of food; do not feed a full meal prior to travel (Plumb client info)",
         "Do not use injectable 1 mg/kg interchangeably for motion sickness",
         "Hospital tablet strengths: 16 mg and 24 mg (product stock)"
       ],
-      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). Prevention of vomiting due to motion sickness \u2014 Tablets \u2014 8 mg/kg PO once daily up to 2 consecutive days.",
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition — Maropitant monograph pp. 799–801 (cats continue p. 802). Prevention of vomiting due to motion sickness — Tablets — 8 mg/kg PO once daily up to 2 consecutive days.",
       "sourceChecked": "2026-10-18"
     },
     {
       "id": "maropitant-po-cat",
-      "name": "maropitant (tablets / PO \u2014 cat)",
+      "name": "maropitant (tablets / PO — cat)",
       "shortName": "Maropitant",
       "brandNames": [
         "Cerenia"
@@ -127,13 +127,13 @@
         24
       ],
       "notes": [
-        "Cats: prevention of vomiting, including motion sickness (extra-label) \u2014 1 mg/kg SC or PO (Plumb)",
+        "Cats: prevention of vomiting, including motion sickness (extra-label) — 1 mg/kg SC or PO (Plumb)",
         "OFF-LABEL relative to Cerenia tablets (dog-only oral licence); injectable is labelled for cats",
         "Do not conflate with Plumb CKD line of 4 mg/cat (NOT mg/kg) PO q24h",
-        "Hospital tablet strengths: 16 mg and 24 mg (product stock) \u2014 score carefully in small cats",
+        "Hospital tablet strengths: 16 mg and 24 mg (product stock) — score carefully in small cats",
         "Also consistent with iCatCare CKD 2026 Table 4: 1 mg/kg SC, IV or PO q24h"
       ],
-      "source": "Plumb's Veterinary Drug Handbook, 10th Edition \u2014 Maropitant monograph pp. 799\u2013801 (cats continue p. 802). CATS \u2014 Prevention of vomiting, including from motion sickness (extra-label): 1 mg/kg SC or PO. Optional concordant: iCatCare CKD 2026 Table 4 (1 mg/kg SC, IV or PO q24h).",
+      "source": "Plumb's Veterinary Drug Handbook, 10th Edition — Maropitant monograph pp. 799–801 (cats continue p. 802). CATS — Prevention of vomiting, including from motion sickness (extra-label): 1 mg/kg SC or PO. Optional concordant: iCatCare CKD 2026 Table 4 (1 mg/kg SC, IV or PO q24h).",
       "sourceChecked": "2026-10-18"
     },
     {
@@ -153,23 +153,39 @@
         "min": 5,
         "max": 10
       },
-      "frequency": "5 mg/kg q12h OR 10 mg/kg q24h (choose one pattern)",
+      "frequency": "BID",
       "form": "tablet",
       "tabletStrengthMg": [
         50,
         100
       ],
       "notes": [
-        "Default (respiratory URI/CIRDC/bronchitis): 5 mg/kg PO q12h (BID) OR 10 mg/kg PO q24h (SID) \u2014 choose one pattern",
-        "UTI reserved only: 5 mg/kg PO q12h (not first-line; low urine excretion) \u2014 ISCAID UTI 2019",
-        "Canine pyoderma second-choice: same 5 mg/kg q12h OR 10 mg/kg q24h (dogs; after BC/AST) \u2014 ISCAID pyoderma 2025",
+        "Default (respiratory URI/CIRDC/bronchitis): 5 mg/kg PO BID OR 10 mg/kg PO SID — choose one pattern",
+        "UTI reserved only: 5 mg/kg PO BID (not first-line; low urine excretion) — ISCAID UTI 2019",
+        "Canine pyoderma second-choice: same 5 mg/kg BID OR 10 mg/kg SID (dogs; after BC/AST) — ISCAID pyoderma 2025",
         "Hyclate and monohydrate interchangeable at same mg/kg (ISCAID)",
-        "Cats: never dry-pill \u2014 follow tablets with water, pill treat, \u22652 mL liquid, or food (oesophageal stricture/ulceration risk)",
+        "Cats: never dry-pill — follow tablets with water, pill treat, ≥2 mL liquid, or food (oesophageal stricture/ulceration risk)",
         "OK in puppies/kittens >4 weeks without enamel discoloration (ISCAID respiratory Table 2)",
-        "Hospital tablet strengths: 50 mg and 100 mg (stock for calculator \u2014 not a dose source)"
+        "Hospital tablet strengths: 50 mg and 100 mg (stock for calculator — not a dose source)"
       ],
-      "source": "ISCAID Antimicrobial use Guidelines for Treatment of Respiratory Tract Disease in Dogs and Cats (Lappin et al. J Vet Intern Med 2017;31:279\u2013294) Table 2 \u2014 Doxycycline 5 mg/kg, PO, q12h Or 10 mg/kg, PO, q24h. DOI 10.1111/jvim.14627; PMC5354050. Supporting: ISCAID UTI 2019 (Weese et al. Vet J) 5 mg/kg PO q12h reserved; ISCAID canine pyoderma 2025 (Loeffler et al.) Table 15 second-choice same 5 q12h / 10 q24h (dogs). Plumb's 10th not verified in-hand for this entry.",
-      "sourceChecked": "2026-10-19"
+      "source": "ISCAID Antimicrobial use Guidelines for Treatment of Respiratory Tract Disease in Dogs and Cats (Lappin et al. J Vet Intern Med 2017;31:279–294) Table 2 — Doxycycline 5 mg/kg, PO, q12h Or 10 mg/kg, PO, q24h. DOI 10.1111/jvim.14627; PMC5354050. Supporting: ISCAID UTI 2019 (Weese et al. Vet J) 5 mg/kg PO q12h reserved; ISCAID canine pyoderma 2025 (Loeffler et al.) Table 15 second-choice same 5 q12h / 10 q24h (dogs). Plumb's 10th not verified in-hand for this entry.",
+      "sourceChecked": "2026-10-19",
+      "frequencyOptions": [
+        {
+          "freq": "BID",
+          "dosePerKg": {
+            "min": 5,
+            "max": 5
+          }
+        },
+        {
+          "freq": "SID",
+          "dosePerKg": {
+            "min": 10,
+            "max": 10
+          }
+        }
+      ]
     },
     {
       "id": "doxycycline-paste",
@@ -188,17 +204,33 @@
         "min": 5,
         "max": 10
       },
-      "frequency": "5 mg/kg q12h OR 10 mg/kg q24h (choose one pattern)",
+      "frequency": "BID",
       "form": "liquid",
       "concentrationMgPerMl": 100,
       "notes": [
-        "Same mg/kg PO as tablets: 5 mg/kg q12h OR 10 mg/kg q24h (ISCAID respiratory Table 2)",
-        "Oral liquid/paste avoids dry-pilling solid tablets/capsules; still use the same mg/kg. Commercial hospital paste \u2260 compounded aqueous suspension (guideline advises against compounded aqueous doxycycline).",
-        "UTI reserved: 5 mg/kg PO q12h only when that indication applies",
-        "Hospital stock: 100 mg/mL paste, 2.5 mL tube (concentration for volume calc \u2014 not a dose source)"
+        "Same mg/kg PO as tablets: 5 mg/kg BID OR 10 mg/kg SID (ISCAID respiratory Table 2)",
+        "Oral liquid/paste avoids dry-pilling solid tablets/capsules; still use the same mg/kg. Commercial hospital paste ≠ compounded aqueous suspension (guideline advises against compounded aqueous doxycycline).",
+        "UTI reserved: 5 mg/kg PO BID only when that indication applies",
+        "Hospital stock: 100 mg/mL paste, 2.5 mL tube (concentration for volume calc — not a dose source)"
       ],
-      "source": "ISCAID Antimicrobial use Guidelines for Treatment of Respiratory Tract Disease in Dogs and Cats (Lappin et al. J Vet Intern Med 2017;31:279\u2013294) Table 2 \u2014 Doxycycline 5 mg/kg, PO, q12h Or 10 mg/kg, PO, q24h. DOI 10.1111/jvim.14627; PMC5354050. Same mg/kg for oral paste as tablets (guideline does not differentiate oral solid vs paste). Plumb's 10th not verified in-hand for this entry.",
-      "sourceChecked": "2026-10-19"
+      "source": "ISCAID Antimicrobial use Guidelines for Treatment of Respiratory Tract Disease in Dogs and Cats (Lappin et al. J Vet Intern Med 2017;31:279–294) Table 2 — Doxycycline 5 mg/kg, PO, q12h Or 10 mg/kg, PO, q24h. DOI 10.1111/jvim.14627; PMC5354050. Same mg/kg for oral paste as tablets (guideline does not differentiate oral solid vs paste). Plumb's 10th not verified in-hand for this entry.",
+      "sourceChecked": "2026-10-19",
+      "frequencyOptions": [
+        {
+          "freq": "BID",
+          "dosePerKg": {
+            "min": 5,
+            "max": 5
+          }
+        },
+        {
+          "freq": "SID",
+          "dosePerKg": {
+            "min": 10,
+            "max": 10
+          }
+        }
+      ]
     }
   ]
 }

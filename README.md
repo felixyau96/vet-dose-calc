@@ -25,7 +25,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 ## UI
 
 - **Left:** species, weight (kg), search, multi-select checklist of medications.
-- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the nearest whole/half/quarter-tab match is auto-selected and marked **Best**; other strengths stay selectable and drive Give amount + copy lines.
+- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the nearest whole/half/quarter-tab match is auto-selected and marked **Best**; other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg and re-runs Best tablet match.
 - Notes render as a bullet list (`notes` string or `string[]`).
 
 ## Formulary file
@@ -46,6 +46,10 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
   "routes": ["IV", "IM", "SC", "PO"],
   "form": "tablet",
   "frequency": "SID",
+  "frequencyOptions": [
+    { "freq": "BID", "dosePerKg": { "min": 5, "max": 5 } },
+    { "freq": "SID", "dosePerKg": { "min": 10, "max": 10 } }
+  ],
   "doseUnit": "mg",
   "dosePerKg": { "min": 1, "max": 2 },
   "fixedTotal": null,
@@ -65,7 +69,8 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 | `concentrationMgPerMl` | always **mg/ml**. For mcg doses: volume = (dose_mcg / 1000) / concentration |
 | `tabletStrengthMg` | tablet strengths in mg; UI auto-selects the nearest whole/half/quarter-tablet match (badge **Best**) and lets you pick another strength when several exist |
 | `form` | optional `"tablet"` \| `"capsule"` \| `"injectable"` \| `"liquid"` — drives copy-line format |
-| `frequency` | optional short label for copy lines, e.g. `"SID"`, `"BID"` |
+| `frequency` | optional short label for copy lines, e.g. `"SID"`, `"BID"` (default selected when `frequencyOptions` present) |
+| `frequencyOptions` | optional `[{freq, dosePerKg}]` for drugs with SID **or** BID and different mg/kg (e.g. doxycycline). UI shows BID/SID pills; **calculations** (dose, Best tablet, volume, copy) use the selected option’s `dosePerKg`. Keep top-level `dosePerKg` as the labelled band for docs. Drugs without this field are unchanged. |
 | `notes` | string (newlines / `•` / `-` lines) **or** `string[]` (preferred) — shown as bullets |
 | `shortName` | optional clean name for copy lines; otherwise parentheticals are stripped from `name` |
 | `source` | citation shown in the UI |
