@@ -118,7 +118,7 @@
     .species-toggle button:focus-visible {
       outline: 3px solid #7eb8c4; outline-offset: 2px;
     }
-    input[type="search"], input[type="number"], textarea {
+    input[type="search"], input[type="number"], input.dose-pick-input, textarea {
       width: 100%; min-height: var(--touch); font-size: 1.05rem;
       padding: 0.55rem 0.75rem; border: 2px solid var(--border);
       border-radius: 10px; background: #fff; color: var(--ink);
@@ -419,6 +419,7 @@
     strengthPick: {},
     freqPick: {},
     dosePickPerKg: {},
+    dosePickDraft: {},
     loadError: null,
   };
   const els = {
@@ -522,6 +523,7 @@
       delete state.strengthPick[id];
       delete state.freqPick[id];
       delete state.dosePickPerKg[id];
+      delete state.dosePickDraft[id];
     }
     renderList();
     renderResults();
@@ -534,6 +536,7 @@
     delete state.strengthPick[id];
     delete state.freqPick[id];
     delete state.dosePickPerKg[id];
+    delete state.dosePickDraft[id];
     renderList();
     renderResults();
   }
@@ -796,6 +799,112 @@
     return "mg/kg";
   }
 
+  /** Raw draft for desired mg/kg box: digits, optional one ".", up to 2 d.p. */
+  function sanitizeDosePickDraft(raw) {
+    var s = String(raw == null ? "" : raw);
+    var out = "";
+    var seenDot = false;
+    var dec = 0;
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i);
+      if (ch >= "0" && ch <= "9") {
+        if (seenDot) {
+          if (dec >= 2) continue;
+          dec++;
+        }
+        out += ch;
+      } else if (ch === "." && !seenDot) {
+        seenDot = true;
+        out += ch;
+      }
+    }
+    return out;
+  }
+
+  function dosePickDraftIncomplete(raw) {
+    if (raw == null || raw === "") return true;
+    if (String(raw).slice(-1) === ".") return true;
+    return false;
+  }
+
+  function applyDosePickFromDraft(drugId, bandMin, bandMax, raw) {
+    var cleaned = sanitizeDosePickDraft(raw);
+    state.dosePickDraft[drugId] = cleaned;
+    if (cleaned === "" || dosePickDraftIncomplete(cleaned)) {
+      // Keep prior pick while typing incomplete values like "7."; clear only on empty.
+      if (cleaned === "") delete state.dosePickPerKg[drugId];
+      return cleaned;
+    }
+    var v = parseFloat(cleaned);
+    if (!Number.isFinite(v)) {
+      return cleaned;
+    }
+    if (v < bandMin) v = bandMin;
+    if (v > bandMax) v = bandMax;
+    v = Number(v.toFixed(2));
+    state.dosePickPerKg[drugId] = v;
+    return cleaned;
+  }
+
+  function finalizeDosePick(drugId, bandMin, bandMax, raw) {
+    var cleaned = sanitizeDosePickDraft(raw);
+    if (cleaned === "" || cleaned === ".") {
+      delete state.dosePickPerKg[drugId];
+      delete state.dosePickDraft[drugId];
+      return;
+    }
+    var v = parseFloat(cleaned);
+    if (!Number.isFinite(v)) {
+      delete state.dosePickDraft[drugId];
+      return;
+    }
+    if (v < bandMin) v = bandMin;
+    if (v > bandMax) v = bandMax;
+    v = Number(v.toFixed(2));
+    state.dosePickPerKg[drugId] = v;
+    state.dosePickDraft[drugId] = String(v);
+  }
+
+  /** Update Give volume + copy lines without remounting the dose-pick input. */
+  function refreshDoseOutputsInPlace(drugId) {
+    var drug = drugById(drugId);
+    if (!drug) return;
+    var w = parseFloat(els.weight.value);
+    var card = els.resultsHost.querySelector('.result-card[data-id="' + drugId + '"]');
+    if (card) {
+      var valueEl = card.querySelector(".dose-card .value");
+      if (valueEl) {
+        var range = doseRange(drug, w);
+        var eff = effectivePerKg(drug);
+        var tabletMode = isTabletForm(drug) && (drug.tabletStrengthMg || []).length > 0;
+        var liquidMode = !tabletMode && (
+          isLiquidOrInj(drug) ||
+          (drug.concentrationMgPerMl != null && Number(drug.concentrationMgPerMl) > 0)
+        );
+        if (liquidMode && range && !range.fixed &&
+            (range.unit === "mg" || range.unit === "mcg") &&
+            drug.concentrationMgPerMl != null && Number(drug.concentrationMgPerMl) > 0 &&
+            Number.isFinite(w) && w > 0 && eff) {
+          var c = Number(drug.concentrationMgPerMl);
+          var doseAmt = eff.perKg * w;
+          var vol = range.unit === "mcg" ? (doseAmt / 1000) / c : doseAmt / c;
+          var concBadge =
+            '<span class="conc-sep">·</span> <span class="conc-badge">' +
+            fmtNum(c) + " mg/mL</span>";
+          valueEl.innerHTML = fmtVolMl(vol) + " mL " + concBadge;
+        }
+      }
+    }
+    // Rebuild copy box from current selections
+    var copyLines = [];
+    state.selectedIds.forEach(function (id) {
+      var d = drugById(id);
+      if (d) copyLines.push(buildCopyLine(d, w));
+    });
+    els.copyBox.value = copyLines.join("\n");
+    els.btnCopy.disabled = copyLines.length === 0;
+  }
+
   function buildCopyLine(drug, weightKg) {
     var name = shortDrugName(drug);
     var route = selectedRoute(drug) || "—";
@@ -939,44 +1048,79 @@
       var wrap = document.createElement("div");
       wrap.className = "dose-pick-wrap";
       var inp = document.createElement("input");
-      inp.type = "number";
+      inp.type = "text";
       inp.className = "dose-pick-input";
-      inp.step = "0.01";
-      inp.min = String(bandMin);
-      inp.max = String(bandMax);
       inp.inputMode = "decimal";
+      inp.autocomplete = "off";
+      inp.setAttribute("data-min", String(bandMin));
+      inp.setAttribute("data-max", String(bandMax));
+      inp.setAttribute("data-step", "0.01");
+      inp.setAttribute("aria-valuemin", String(bandMin));
+      inp.setAttribute("aria-valuemax", String(bandMax));
       var effPick = effectivePerKg(drug);
       var defaultVal = effPick ? effPick.defaultPerKg : (bandMin + bandMax) / 2;
       var unitSuffix = perKgUnitLabel(bandUnit);
       inp.placeholder = fmtNum(defaultVal, 2);
       inp.setAttribute("aria-label", "Desired dose " + unitSuffix);
+      var draft = state.dosePickDraft[drug.id];
       var pick = state.dosePickPerKg[drug.id];
-      if (pick != null && Number.isFinite(Number(pick))) {
+      if (draft != null) {
+        inp.value = String(draft);
+      } else if (pick != null && Number.isFinite(Number(pick))) {
         inp.value = String(Number(Number(pick).toFixed(2)));
       }
       var unitLab = document.createElement("span");
       unitLab.className = "dose-pick-unit";
       unitLab.textContent = unitSuffix;
-      inp.addEventListener("input", function () {
-        var raw = inp.value.trim();
-        var v = parseFloat(raw);
-        if (raw === "" || !Number.isFinite(v)) {
-          delete state.dosePickPerKg[drug.id];
-        } else {
-          if (v < bandMin) v = bandMin;
-          if (v > bandMax) v = bandMax;
-          v = Number(v.toFixed(2));
-          state.dosePickPerKg[drug.id] = v;
+      function onDosePickInput() {
+        var start = inp.selectionStart;
+        var before = inp.value;
+        var cleaned = applyDosePickFromDraft(drug.id, bandMin, bandMax, before);
+        if (cleaned !== before) {
+          inp.value = cleaned;
+          try {
+            // Map cursor: how many legal chars sat before the old caret.
+            var kept = 0;
+            var seenDot = false;
+            var dec = 0;
+            var lim = start == null ? before.length : start;
+            for (var i = 0; i < before.length && i < lim; i++) {
+              var ch = before.charAt(i);
+              if (ch >= "0" && ch <= "9") {
+                if (seenDot) {
+                  if (dec >= 2) continue;
+                  dec++;
+                }
+                kept++;
+              } else if (ch === "." && !seenDot) {
+                seenDot = true;
+                kept++;
+              }
+            }
+            var newPos = Math.min(kept, cleaned.length);
+            inp.setSelectionRange(newPos, newPos);
+          } catch (e) { /* ignore */ }
         }
+        refreshDoseOutputsInPlace(drug.id);
+      }
+      function onDosePickFinalize() {
+        finalizeDosePick(drug.id, bandMin, bandMax, inp.value);
         renderResults();
         var card = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
         var again = card && card.querySelector("input.dose-pick-input");
-        if (again) {
-          again.focus();
+        if (again && document.activeElement === again) {
           try {
             var len = again.value.length;
             again.setSelectionRange(len, len);
-          } catch (e) { /* number inputs may not support selection */ }
+          } catch (e) { /* ignore */ }
+        }
+      }
+      inp.addEventListener("input", onDosePickInput);
+      inp.addEventListener("blur", onDosePickFinalize);
+      inp.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          inp.blur();
         }
       });
       wrap.appendChild(inp);
@@ -1289,6 +1433,7 @@
               } else {
                 delete state.dosePickPerKg[id];
               }
+              delete state.dosePickDraft[id];
               renderResults();
             });
             freqWrap.appendChild(btn);
