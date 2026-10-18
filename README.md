@@ -25,7 +25,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 ## UI
 
 - **Left:** species, weight (kg), search, multi-select checklist of medications.
-- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the nearest whole/half/quarter-tab match is auto-selected and marked **Best**; other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg and re-runs Best tablet match. When the **effective** per-kg band has min ≠ max (after any frequency option), a desired-dose number box appears next to the range so you can type mg/kg or mcg/kg; Give / Best tablet / volume / copy follow that value (clamped to the band). Point doses (including doxy BID/SID options) hide the box.
+- **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the nearest whole/half/quarter-tab match is auto-selected and marked **Best**; other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg (and prefills the desired-dose box) and re-runs Best tablet match. A desired-dose number box appears when the **top-level** formulary `dosePerKg` has min ≠ max **or** the effective band (after frequency) has min ≠ max — so liquid/paste/injectable range drugs (e.g. doxycycline 5–10) keep the box even when BID/SID is a point dose. Typed values clamp to the top-level band when it is a range; clearing the box falls back to the selected frequency option’s dose (else midpoint). Point-only top-level doses (e.g. maropitant 1 mg/kg) hide the box.
 - Notes render as a bullet list (`notes` string or `string[]`).
 
 ## Formulary file
@@ -64,13 +64,13 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 | Field | Notes |
 |-------|--------|
 | `doseUnit` | `"mg"`, `"mcg"`, or `"U"` (units) |
-| `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal`. When min ≠ max (and no point `frequencyOptions` override), UI offers a desired mg/kg (or mcg/kg) input |
+| `dosePerKg` | min/max per kg in `doseUnit`; set `null` when using `fixedTotal`. Top-level min ≠ max (labelled formulary band) shows a desired mg/kg (or mcg/kg) input even if a selected `frequencyOptions` entry is a point dose; clamp uses this band |
 | `fixedTotal` | `{min,max,unit,note}` for fixed (not per-kg) totals |
 | `concentrationMgPerMl` | always **mg/ml**. For mcg doses: volume = (dose_mcg / 1000) / concentration |
 | `tabletStrengthMg` | tablet strengths in mg; UI auto-selects the nearest whole/half/quarter-tablet match (badge **Best**) and lets you pick another strength when several exist |
 | `form` | optional `"tablet"` \| `"capsule"` \| `"injectable"` \| `"liquid"` — drives copy-line format |
 | `frequency` | optional short label for copy lines, e.g. `"SID"`, `"BID"` (default selected when `frequencyOptions` present) |
-| `frequencyOptions` | optional `[{freq, dosePerKg}]` for drugs with SID **or** BID and different mg/kg (e.g. doxycycline). UI shows BID/SID pills; **calculations** (dose, Best tablet, volume, copy) use the selected option’s `dosePerKg`. Keep top-level `dosePerKg` as the labelled band for docs. Drugs without this field are unchanged. |
+| `frequencyOptions` | optional `[{freq, dosePerKg}]` for drugs with SID **or** BID and different mg/kg (e.g. doxycycline). UI shows BID/SID pills; default dose / volume / Best / copy use the selected option’s `dosePerKg` (user can override within the top-level labelled band). Keep top-level `dosePerKg` as the labelled band. Drugs without this field are unchanged. |
 | `notes` | string (newlines / `•` / `-` lines) **or** `string[]` (preferred) — shown as bullets |
 | `shortName` | optional clean name for copy lines; otherwise parentheticals are stripped from `name` |
 | `source` | citation shown in the UI |
@@ -78,7 +78,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 **Copy line formats**
 
 - Tablet/capsule: `Name StrengthMg mg Ntab ROUTE FREQ` (e.g. `Maropitant 16mg 0.5tab PO SID`)
-- Liquid/injectable: `Name Xmg/kg ROUTE FREQ` (e.g. `Maropitant 1mg/kg SC SID`)
+- Liquid/injectable: `Name Xmg/kg (volume mL) ROUTE FREQ` (e.g. `Maropitant 1mg/kg (0.4 mL) SC SID` for 4 kg at 10 mg/mL)
 
 Calculator prefers `doseUnit` + `dosePerKg`; falls back to legacy `doseMgPerKg` / `doseMcgPerKg`.
 
