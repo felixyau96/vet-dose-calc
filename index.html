@@ -326,6 +326,14 @@
       font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.15rem;
     }
+    .source-box .source-list {
+      margin: 0.15rem 0 0; padding-left: 1.15rem;
+      font-size: 0.85rem;
+    }
+    .source-box .source-list li { margin: 0.25rem 0; }
+    .source-box .src-checked {
+      margin-top: 0.35rem; font-size: 0.78rem; color: var(--muted);
+    }
     .tablet-options { margin: 0; padding-left: 1.1rem; }
     .tablet-options li { margin: 0.2rem 0; }
     .tablet-note { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
@@ -651,6 +659,62 @@
     return [s];
   }
 
+  /** Split source citations into bullet items without rewriting text. */
+  function parseSource(source) {
+    if (!source) return [];
+    if (Array.isArray(source)) {
+      return source.map(function (x) { return String(x).trim(); }).filter(Boolean);
+    }
+    var s = String(source).trim();
+    if (!s) return [];
+    var lines = s.split(/\n+/).map(function (l) {
+      return l.replace(/^\s*[•\-]\s*/, "").replace(/^\s*\d+[.)]\s*/, "").trim();
+    }).filter(Boolean);
+    if (lines.length > 1) return lines;
+    if (/[•]/.test(s)) {
+      return s.split(/[•]/).map(function (l) { return l.trim(); }).filter(Boolean);
+    }
+    // Semicolon + whitespace can separate citations; keep journal vol;page (no space).
+    // Skip splits where the next fragment starts lowercase (mid-sentence dose notes).
+    if (/;\s+/.test(s)) {
+      var rawParts = s.split(/;\s+/);
+      var parts = [];
+      for (var i = 0; i < rawParts.length; i++) {
+        var p = String(rawParts[i] || "").trim();
+        if (!p) continue;
+        if (parts.length && /^[a-z]/.test(p)) {
+          parts[parts.length - 1] = parts[parts.length - 1] + "; " + p;
+        } else {
+          parts.push(p);
+        }
+      }
+      if (parts.length > 1) return parts;
+    }
+    return [s];
+  }
+
+  function renderSourceEl(container, source, sourceChecked) {
+    var items = parseSource(source);
+    if (!items.length) {
+      items = ["(no source recorded in drugs.json)"];
+    }
+    var ul = document.createElement("ul");
+    ul.className = "source-list";
+    items.forEach(function (t) {
+      var li = document.createElement("li");
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+    container.appendChild(ul);
+    if (sourceChecked) {
+      var checked = document.createElement("div");
+      checked.className = "src-checked";
+      checked.textContent = "checked " + sourceChecked;
+      container.appendChild(checked);
+    }
+    return true;
+  }
+
   function isTabletForm(drug) {
     var form = String(drug.form || "").toLowerCase();
     if (form === "tablet" || form === "capsule") return true;
@@ -846,14 +910,6 @@
       return { text: fmtVolMl(total) + " mL", hint: "" };
     }
     return { text: "—", hint: "" };
-  }
-
-  function quantityCopySuffix(drug, weightKg) {
-    var days = state.daysSupply[drug.id];
-    if (days == null || !(Number(days) >= 1)) return "";
-    var q = computeQuantityRequired(drug, weightKg);
-    if (!q || q.text === "—" || q.hint) return "";
-    return " × " + Number(days) + "d → " + q.text;
   }
 
   function refreshQuantityInCard(card, drug, weightKg) {
@@ -1177,21 +1233,18 @@
 
     if (isTabletForm(drug) && (drug.tabletStrengthMg || []).length) {
       if (!range || !Number.isFinite(weightKg) || weightKg <= 0) {
-        return name + " — enter weight — " + String(route).toUpperCase() + " " + freq +
-          quantityCopySuffix(drug, weightKg);
+        return name + " — enter weight — " + String(route).toUpperCase() + " " + freq;
       }
       var effT = effectivePerKg(drug);
       var doseUnitAmt = effT ? effT.perKg * weightKg : (range.minDose + range.maxDose) / 2;
       var midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
       var suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
       if (!suggestions.length) {
-        return name + " — no tablet match — " + String(route).toUpperCase() + " " + freq +
-          quantityCopySuffix(drug, weightKg);
+        return name + " — no tablet match — " + String(route).toUpperCase() + " " + freq;
       }
       var chosen = selectedTabletSuggestion(drug, suggestions);
       var tabStr = String(chosen.tablets) + "tab";
-      return name + " " + fmtNum(chosen.strength) + "mg " + tabStr + " " + String(route).toUpperCase() + " " + freq +
-        quantityCopySuffix(drug, weightKg);
+      return name + " " + fmtNum(chosen.strength) + "mg " + tabStr + " " + String(route).toUpperCase() + " " + freq;
     }
 
     // Liquid / injectable (and other per-kg): Name Xmg/kg (vol mL) ROUTE FREQ
@@ -1217,19 +1270,16 @@
         var volMl = (effL.unit === "mcg" ? doseAmt / 1000 : doseAmt) / Number(concRaw);
         volPart = " (" + fmtVolMl(volMl) + " mL)";
       }
-      return name + " " + perKgStr + volPart + " " + String(route).toUpperCase() + " " + freq +
-        quantityCopySuffix(drug, weightKg);
+      return name + " " + perKgStr + volPart + " " + String(route).toUpperCase() + " " + freq;
     }
     if (range && range.fixed) {
       var same = Math.abs(range.minDose - range.maxDose) < 1e-9;
       var doseStr = same
         ? fmtNum(range.minDose) + range.unit
         : fmtNum(range.minDose) + "–" + fmtNum(range.maxDose) + range.unit;
-      return name + " " + doseStr + " " + String(route).toUpperCase() + " " + freq +
-        quantityCopySuffix(drug, weightKg);
+      return name + " " + doseStr + " " + String(route).toUpperCase() + " " + freq;
     }
-    return name + " — " + String(route).toUpperCase() + " " + freq +
-      quantityCopySuffix(drug, weightKg);
+    return name + " — " + String(route).toUpperCase() + " " + freq;
   }
 
   function renderNotesEl(container, notes) {
@@ -1733,12 +1783,8 @@
       const srcLabel = document.createElement("div");
       srcLabel.className = "src-label";
       srcLabel.textContent = "Source";
-      const srcText = document.createElement("div");
-      const src = drug.source || "(no source recorded in drugs.json)";
-      const checked = drug.sourceChecked ? " · checked " + drug.sourceChecked : "";
-      srcText.textContent = src + checked;
       srcBox.appendChild(srcLabel);
-      srcBox.appendChild(srcText);
+      renderSourceEl(srcBox, drug.source, drug.sourceChecked);
       card.appendChild(srcBox);
 
       els.resultsHost.appendChild(card);
