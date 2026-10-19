@@ -815,10 +815,13 @@
     return null;
   }
 
+  /** Whole tablets for course quantity: always round up (ceil). */
   function fmtTabQty(n) {
     if (!Number.isFinite(n)) return "—";
-    if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
-    return String(Number(n.toFixed(2)));
+    // Epsilon so float noise just above a whole number does not bump to n+1
+    var tabs = Math.ceil(n - 1e-9);
+    if (tabs < 0) tabs = 0;
+    return String(tabs);
   }
 
   /** { text, hint } — text is display string e.g. "14 tab" or "—". */
