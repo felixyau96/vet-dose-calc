@@ -26,6 +26,7 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 
 - **Left:** species, weight (kg), search, multi-select checklist of medications.
 - **Right:** result panels for each selected drug (stack on mobile); sticky **Copy lines** box with one line per drug and a Copy button. Tablet drugs with multiple `tabletStrengthMg` values show a strength picker: the closest mg match is auto-selected and marked **Best**, preferring whole tablets over halves/quarters (then fewer tabs); other strengths stay selectable and drive Give amount + copy lines. Drugs with `frequencyOptions` (length ≥ 2) show a **BID / SID** frequency picker; choosing frequency selects that option’s mg/kg (and prefills the desired-dose box on liquid/paste/injectable forms) and re-runs Best tablet match. A desired-dose number box appears for **liquid / injectable / paste only** (not tablet/capsule) when the **top-level** formulary `dosePerKg` has min ≠ max **or** the effective band (after frequency) has min ≠ max — e.g. doxycycline paste 5–10 keeps the box even when BID/SID is a point dose; doxycycline tablets keep Best strength only (no dose box). The box is a text field (`inputMode=decimal`) that keeps a raw draft while typing so intermediate values like `7.` / `7.2` are not snapped away; it accepts/displays up to **2 decimal places**. Complete numbers update volume live; blur/Enter clamps to the top-level band when it is a range; clearing the box falls back to the selected frequency option’s dose (else midpoint). Point-only top-level doses (e.g. maropitant 1 mg/kg) hide the box. Volume (Give card + copy-line mL): **&lt; 1 mL** up to 2 d.p.; **≥ 1 mL** up to 1 d.p. (trailing zeros trimmed).
+- **Days to supply / Quantity required:** each result card has a **Days to supply** number box (integer ≥ 1; blank = no quantity) and a read-only **Quantity required** readout. Formula: Give amount × doses/day × days. Doses/day maps clear frequency only — SID→1, BID→2, TID→3, QID→4; otherwise quantity shows “—” with hint “set frequency”. Tablets/capsules: `tabs_per_dose × doses/day × days` (e.g. 1 tab BID × 7d → **14 tab**); liquids/injectables: total mL then `fmtVolMl` (e.g. 0.5 mL BID × 7d → **7 mL**; 0.4 mL SID × 5d → **2 mL**). Missing weight or Give → “—”. When days are set and quantity is known, the copy line appends ` × Nd → …` (e.g. ` × 7d → 14 tab`).
 - Notes render as a bullet list (`notes` string or `string[]`).
 
 ## Formulary file
@@ -77,8 +78,8 @@ Binds `0.0.0.0:8787` (override with `DOSE_CALC_PORT`). Serves this directory as 
 
 **Copy line formats**
 
-- Tablet/capsule: `Name StrengthMg mg Ntab ROUTE FREQ` (e.g. `Maropitant 16mg 0.5tab PO SID`)
-- Liquid/injectable: `Name Xmg/kg (volume mL) ROUTE FREQ` (e.g. `Maropitant 1mg/kg (0.4 mL) SC SID` for 4 kg at 10 mg/mL). Volume decimals: &lt;1 mL up to 2 d.p.; ≥1 mL up to 1 d.p.
+- Tablet/capsule: `Name StrengthMg mg Ntab ROUTE FREQ` (e.g. `Maropitant 16mg 0.5tab PO SID`); with days filled: `… FREQ × 7d → 14 tab`
+- Liquid/injectable: `Name Xmg/kg (volume mL) ROUTE FREQ` (e.g. `Maropitant 1mg/kg (0.4 mL) SC SID` for 4 kg at 10 mg/mL). Volume decimals: &lt;1 mL up to 2 d.p.; ≥1 mL up to 1 d.p. With days: `… FREQ × 5d → 2 mL`
 
 Calculator prefers `doseUnit` + `dosePerKg`; falls back to legacy `doseMgPerKg` / `doseMcgPerKg`.
 

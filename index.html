@@ -118,7 +118,7 @@
     .species-toggle button:focus-visible {
       outline: 3px solid #7eb8c4; outline-offset: 2px;
     }
-    input[type="search"], input[type="number"], input.dose-pick-input, textarea {
+    input[type="search"], input[type="number"], input.dose-pick-input, input.days-supply-input, textarea {
       width: 100%; min-height: var(--touch); font-size: 1.05rem;
       padding: 0.55rem 0.75rem; border: 2px solid var(--border);
       border-radius: 10px; background: #fff; color: var(--ink);
@@ -216,6 +216,28 @@
       font-variant-numeric: tabular-nums; color: var(--ink);
     }
     .dose-card .hint { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .supply-card .supply-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      align-items: start;
+    }
+    @media (max-width: 420px) {
+      .supply-card .supply-grid { grid-template-columns: 1fr; }
+    }
+    .days-supply-input {
+      width: 5rem; min-height: 36px; padding: 0.3rem 0.45rem;
+      font-size: 0.95rem; font-variant-numeric: tabular-nums;
+    }
+    .quantity-value {
+      display: flex; align-items: center;
+      min-height: 36px; padding: 0.3rem 0.55rem;
+      font-size: 1.05rem; font-weight: 700;
+      font-variant-numeric: tabular-nums; color: var(--ink);
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    }
+    .quantity-value.is-empty { color: var(--muted); font-weight: 600; }
+    .quantity-hint { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
     .dose-pick-row {
       display: flex; flex-wrap: wrap; align-items: center;
       gap: 0.35rem 0.65rem; margin-top: 0.35rem;
@@ -420,6 +442,8 @@
     freqPick: {},
     dosePickPerKg: {},
     dosePickDraft: {},
+    daysSupply: {},
+    daysSupplyDraft: {},
     loadError: null,
   };
   const els = {
@@ -524,6 +548,8 @@
       delete state.freqPick[id];
       delete state.dosePickPerKg[id];
       delete state.dosePickDraft[id];
+      delete state.daysSupply[id];
+      delete state.daysSupplyDraft[id];
     }
     renderList();
     renderResults();
@@ -537,6 +563,8 @@
     delete state.freqPick[id];
     delete state.dosePickPerKg[id];
     delete state.dosePickDraft[id];
+    delete state.daysSupply[id];
+    delete state.daysSupplyDraft[id];
     renderList();
     renderResults();
   }
@@ -699,9 +727,248 @@
     return opts[0];
   }
 
+
   function frequencyOf(drug) {
     return selectedFrequency(drug);
   }
+
+  /** Doses/day from clear SID/BID/TID/QID only; else null (quantity shows —). */
+  function dosesPerDay(freqLabel) {
+    var f = String(freqLabel || "").toUpperCase().trim();
+    if (f === "SID") return 1;
+    if (f === "BID") return 2;
+    if (f === "TID") return 3;
+    if (f === "QID") return 4;
+    return null;
+  }
+
+  function sanitizeDaysDraft(raw) {
+    return String(raw == null ? "" : raw).replace(/\D/g, "");
+  }
+
+  function applyDaysFromDraft(drugId, raw) {
+    var cleaned = sanitizeDaysDraft(raw);
+    state.daysSupplyDraft[drugId] = cleaned;
+    if (cleaned === "") {
+      delete state.daysSupply[drugId];
+      return cleaned;
+    }
+    var n = parseInt(cleaned, 10);
+    if (Number.isFinite(n) && n >= 1) {
+      state.daysSupply[drugId] = n;
+    } else {
+      delete state.daysSupply[drugId];
+    }
+    return cleaned;
+  }
+
+  function finalizeDaysSupply(drugId, raw) {
+    var cleaned = sanitizeDaysDraft(raw);
+    if (cleaned === "") {
+      delete state.daysSupply[drugId];
+      delete state.daysSupplyDraft[drugId];
+      return "";
+    }
+    var n = parseInt(cleaned, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      delete state.daysSupply[drugId];
+      delete state.daysSupplyDraft[drugId];
+      return "";
+    }
+    state.daysSupply[drugId] = n;
+    state.daysSupplyDraft[drugId] = String(n);
+    return String(n);
+  }
+
+  /** Per-dose Give amount: { kind: "tab"|"ml", amount } or null. */
+  function giveAmountPerDose(drug, weightKg) {
+    if (!Number.isFinite(weightKg) || weightKg <= 0) return null;
+    var range = doseRange(drug, weightKg);
+    if (!range) return null;
+    var eff = effectivePerKg(drug);
+    var tabletMode = isTabletForm(drug) && (drug.tabletStrengthMg || []).length > 0;
+    if (tabletMode) {
+      if (!eff && range.fixed) return null;
+      var doseUnitAmt = eff ? eff.perKg * weightKg : (range.minDose + range.maxDose) / 2;
+      var midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
+      var suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
+      if (!suggestions.length) return null;
+      var chosen = selectedTabletSuggestion(drug, suggestions);
+      if (!chosen || !Number.isFinite(chosen.tablets)) return null;
+      return { kind: "tab", amount: chosen.tablets };
+    }
+    var liquidMode = !tabletMode && (
+      isLiquidOrInj(drug) ||
+      (drug.concentrationMgPerMl != null && Number(drug.concentrationMgPerMl) > 0)
+    );
+    if (liquidMode) {
+      var conc = drug.concentrationMgPerMl;
+      if (conc == null || !(Number(conc) > 0) || !(range.unit === "mg" || range.unit === "mcg")) {
+        return null;
+      }
+      if (!eff) return null;
+      var doseAmt = eff.perKg * weightKg;
+      var vol = range.unit === "mcg" ? (doseAmt / 1000) / Number(conc) : doseAmt / Number(conc);
+      if (!Number.isFinite(vol) || vol <= 0) return null;
+      return { kind: "ml", amount: vol };
+    }
+    return null;
+  }
+
+  function fmtTabQty(n) {
+    if (!Number.isFinite(n)) return "—";
+    if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+    return String(Number(n.toFixed(2)));
+  }
+
+  /** { text, hint } — text is display string e.g. "14 tab" or "—". */
+  function computeQuantityRequired(drug, weightKg) {
+    var days = state.daysSupply[drug.id];
+    if (days == null || !(Number(days) >= 1)) {
+      return { text: "—", hint: "" };
+    }
+    var dpd = dosesPerDay(frequencyOf(drug));
+    if (dpd == null) {
+      return { text: "—", hint: "set frequency" };
+    }
+    var give = giveAmountPerDose(drug, weightKg);
+    if (!give || !Number.isFinite(give.amount)) {
+      return { text: "—", hint: "" };
+    }
+    var total = give.amount * dpd * Number(days);
+    if (give.kind === "tab") {
+      return { text: fmtTabQty(total) + " tab", hint: "" };
+    }
+    if (give.kind === "ml") {
+      return { text: fmtVolMl(total) + " mL", hint: "" };
+    }
+    return { text: "—", hint: "" };
+  }
+
+  function quantityCopySuffix(drug, weightKg) {
+    var days = state.daysSupply[drug.id];
+    if (days == null || !(Number(days) >= 1)) return "";
+    var q = computeQuantityRequired(drug, weightKg);
+    if (!q || q.text === "—" || q.hint) return "";
+    return " × " + Number(days) + "d → " + q.text;
+  }
+
+  function refreshQuantityInCard(card, drug, weightKg) {
+    if (!card) return;
+    var qEl = card.querySelector('[data-role="quantity-required"]');
+    var hintEl = card.querySelector('[data-role="quantity-hint"]');
+    if (!qEl) return;
+    var q = computeQuantityRequired(drug, weightKg);
+    qEl.textContent = q.text;
+    qEl.classList.toggle("is-empty", q.text === "—");
+    if (hintEl) {
+      hintEl.textContent = q.hint || "";
+      hintEl.hidden = !q.hint;
+    }
+  }
+
+  function rebuildCopyBox(weightKg) {
+    var copyLines = [];
+    state.selectedIds.forEach(function (id) {
+      var d = drugById(id);
+      if (d) copyLines.push(buildCopyLine(d, weightKg));
+    });
+    els.copyBox.value = copyLines.join("\n");
+    els.btnCopy.disabled = copyLines.length === 0;
+  }
+
+  function appendSupplyRow(gridEl, drug, weightKg) {
+    var card = document.createElement("div");
+    card.className = "dose-card supply-card";
+    var grid = document.createElement("div");
+    grid.className = "supply-grid";
+
+    var daysField = document.createElement("div");
+    daysField.className = "supply-field";
+    var daysLabel = document.createElement("div");
+    daysLabel.className = "label";
+    daysLabel.textContent = "Days to supply";
+    daysField.appendChild(daysLabel);
+    var daysInp = document.createElement("input");
+    daysInp.type = "text";
+    daysInp.className = "days-supply-input";
+    daysInp.inputMode = "numeric";
+    daysInp.autocomplete = "off";
+    daysInp.placeholder = "—";
+    daysInp.setAttribute("aria-label", "Days to supply");
+    var draft = state.daysSupplyDraft[drug.id];
+    var stored = state.daysSupply[drug.id];
+    if (draft != null) {
+      daysInp.value = String(draft);
+    } else if (stored != null && Number(stored) >= 1) {
+      daysInp.value = String(stored);
+    }
+    function onDaysInput() {
+      var start = daysInp.selectionStart;
+      var before = daysInp.value;
+      var cleaned = applyDaysFromDraft(drug.id, before);
+      if (cleaned !== before) {
+        daysInp.value = cleaned;
+        try {
+          var lim = start == null ? before.length : start;
+          var kept = 0;
+          for (var i = 0; i < before.length && i < lim; i++) {
+            var ch = before.charAt(i);
+            if (ch >= "0" && ch <= "9") kept++;
+          }
+          daysInp.setSelectionRange(Math.min(kept, cleaned.length), Math.min(kept, cleaned.length));
+        } catch (e) { /* ignore */ }
+      }
+      var w = parseFloat(els.weight.value);
+      var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+      refreshQuantityInCard(resultCard, drug, w);
+      rebuildCopyBox(w);
+    }
+    function onDaysFinalize() {
+      var next = finalizeDaysSupply(drug.id, daysInp.value);
+      daysInp.value = next;
+      var w = parseFloat(els.weight.value);
+      var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+      refreshQuantityInCard(resultCard, drug, w);
+      rebuildCopyBox(w);
+    }
+    daysInp.addEventListener("input", onDaysInput);
+    daysInp.addEventListener("blur", onDaysFinalize);
+    daysInp.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        daysInp.blur();
+      }
+    });
+    daysField.appendChild(daysInp);
+
+    var qtyField = document.createElement("div");
+    qtyField.className = "supply-field";
+    var qtyLabel = document.createElement("div");
+    qtyLabel.className = "label";
+    qtyLabel.textContent = "Quantity required";
+    qtyField.appendChild(qtyLabel);
+    var qtyVal = document.createElement("div");
+    qtyVal.className = "quantity-value";
+    qtyVal.setAttribute("data-role", "quantity-required");
+    qtyVal.setAttribute("aria-live", "polite");
+    var q = computeQuantityRequired(drug, weightKg);
+    qtyVal.textContent = q.text;
+    if (q.text === "—") qtyVal.classList.add("is-empty");
+    qtyField.appendChild(qtyVal);
+    var qtyHint = document.createElement("div");
+    qtyHint.className = "quantity-hint";
+    qtyHint.setAttribute("data-role", "quantity-hint");
+    qtyHint.textContent = q.hint || "";
+    qtyHint.hidden = !q.hint;
+    qtyField.appendChild(qtyHint);
+
+    grid.appendChild(daysField);
+    grid.appendChild(qtyField);
+    card.appendChild(grid);
+    gridEl.appendChild(card);
+  }
+
 
   /** Top-level formulary per-kg band (ignores frequencyOptions). */
   function labelledDoseBand(drug) {
@@ -895,14 +1162,8 @@
         }
       }
     }
-    // Rebuild copy box from current selections
-    var copyLines = [];
-    state.selectedIds.forEach(function (id) {
-      var d = drugById(id);
-      if (d) copyLines.push(buildCopyLine(d, w));
-    });
-    els.copyBox.value = copyLines.join("\n");
-    els.btnCopy.disabled = copyLines.length === 0;
+    refreshQuantityInCard(card, drug, w);
+    rebuildCopyBox(w);
   }
 
   function buildCopyLine(drug, weightKg) {
@@ -913,18 +1174,21 @@
 
     if (isTabletForm(drug) && (drug.tabletStrengthMg || []).length) {
       if (!range || !Number.isFinite(weightKg) || weightKg <= 0) {
-        return name + " — enter weight — " + String(route).toUpperCase() + " " + freq;
+        return name + " — enter weight — " + String(route).toUpperCase() + " " + freq +
+          quantityCopySuffix(drug, weightKg);
       }
       var effT = effectivePerKg(drug);
       var doseUnitAmt = effT ? effT.perKg * weightKg : (range.minDose + range.maxDose) / 2;
       var midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
       var suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
       if (!suggestions.length) {
-        return name + " — no tablet match — " + String(route).toUpperCase() + " " + freq;
+        return name + " — no tablet match — " + String(route).toUpperCase() + " " + freq +
+          quantityCopySuffix(drug, weightKg);
       }
       var chosen = selectedTabletSuggestion(drug, suggestions);
       var tabStr = String(chosen.tablets) + "tab";
-      return name + " " + fmtNum(chosen.strength) + "mg " + tabStr + " " + String(route).toUpperCase() + " " + freq;
+      return name + " " + fmtNum(chosen.strength) + "mg " + tabStr + " " + String(route).toUpperCase() + " " + freq +
+        quantityCopySuffix(drug, weightKg);
     }
 
     // Liquid / injectable (and other per-kg): Name Xmg/kg (vol mL) ROUTE FREQ
@@ -950,16 +1214,19 @@
         var volMl = (effL.unit === "mcg" ? doseAmt / 1000 : doseAmt) / Number(concRaw);
         volPart = " (" + fmtVolMl(volMl) + " mL)";
       }
-      return name + " " + perKgStr + volPart + " " + String(route).toUpperCase() + " " + freq;
+      return name + " " + perKgStr + volPart + " " + String(route).toUpperCase() + " " + freq +
+        quantityCopySuffix(drug, weightKg);
     }
     if (range && range.fixed) {
       var same = Math.abs(range.minDose - range.maxDose) < 1e-9;
       var doseStr = same
         ? fmtNum(range.minDose) + range.unit
         : fmtNum(range.minDose) + "–" + fmtNum(range.maxDose) + range.unit;
-      return name + " " + doseStr + " " + String(route).toUpperCase() + " " + freq;
+      return name + " " + doseStr + " " + String(route).toUpperCase() + " " + freq +
+        quantityCopySuffix(drug, weightKg);
     }
-    return name + " — " + String(route).toUpperCase() + " " + freq;
+    return name + " — " + String(route).toUpperCase() + " " + freq +
+      quantityCopySuffix(drug, weightKg);
   }
 
   function renderNotesEl(container, notes) {
@@ -1368,6 +1635,7 @@
       const grid = document.createElement("div");
       grid.className = "dose-grid";
       fillDoseGrid(grid, drug, w);
+      appendSupplyRow(grid, drug, w);
       card.appendChild(grid);
 
       const dl = document.createElement("dl");
