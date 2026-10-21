@@ -318,6 +318,11 @@
       font-size: 0.9rem;
     }
     .notes-list li { margin: 0.2rem 0; }
+    .notes-list li.notes-section {
+      list-style: none; margin-left: -1.15rem; margin-top: 0.55rem;
+      font-weight: 600; color: var(--text, #1a1a1a);
+    }
+    .notes-list li.notes-section:first-child { margin-top: 0.15rem; }
     .source-box {
       margin-top: 0.7rem; padding: 0.65rem 0.8rem; background: #fff;
       border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; font-size: 0.85rem;
@@ -703,6 +708,7 @@
     items.forEach(function (t) {
       var li = document.createElement("li");
       li.textContent = t;
+      if (/^\d+\.\s/.test(t)) li.className = "notes-section";
       ul.appendChild(li);
     });
     container.appendChild(ul);
@@ -1290,6 +1296,7 @@
     items.forEach(function (t) {
       var li = document.createElement("li");
       li.textContent = t;
+      if (/^\d+\.\s/.test(t)) li.className = "notes-section";
       ul.appendChild(li);
     });
     container.appendChild(ul);

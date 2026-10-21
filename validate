@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Validate drugs.json against dose-calc schema."""
+import json
+import sys
+from pathlib import Path
+
+path = Path(__file__).resolve().parent / "drugs.json"
+data = json.loads(path.read_text())
+if not isinstance(data, dict) or "drugs" not in data:
+    sys.exit("ERROR: root must be {\"drugs\": [...]}")
+drugs = data["drugs"]
+if not isinstance(drugs, list):
+    sys.exit("ERROR: drugs must be a list")
+ids = set()
+errors = []
+for i, d in enumerate(drugs):
+    pref = f"drugs[{i}]"
+    if not isinstance(d, dict):
+        errors.append(f"{pref}: not an object")
+        continue
+    did = d.get("id")
+    if not did or not isinstance(did, str):
+        errors.append(f"{pref}: missing id")
+    elif did in ids:
+        errors.append(f"{pref}: duplicate id {did}")
+    else:
+        ids.add(did)
+    unit = d.get("doseUnit")
+    if unit not in ("mg", "mcg", "U"):
+        errors.append(f"{pref} ({did}): doseUnit must be mg|mcg|U, got {unit!r}")
+    per = d.get("dosePerKg")
+    fixed = d.get("fixedTotal")
+    has_per = isinstance(per, dict) and "min" in per and "max" in per
+    has_fixed = isinstance(fixed, dict) and "min" in fixed and "max" in fixed
+    legacy = d.get("doseMgPerKg") or d.get("doseMcgPerKg")
+    if not has_per and not has_fixed and not legacy:
+        errors.append(f"{pref} ({did}): need dosePerKg, fixedTotal, or legacy dose*PerKg")
+    if has_per:
+        if not isinstance(per["min"], (int, float)) or not isinstance(per["max"], (int, float)):
+            errors.append(f"{pref} ({did}): dosePerKg min/max must be numbers")
+        elif per["min"] > per["max"]:
+            errors.append(f"{pref} ({did}): dosePerKg min > max")
+    if has_fixed:
+        for k in ("unit", "note"):
+            if k not in fixed:
+                errors.append(f"{pref} ({did}): fixedTotal missing {k}")
+    if not d.get("source"):
+        errors.append(f"{pref} ({did}): missing source")
+    sc = d.get("sourceChecked")
+    if not isinstance(sc, str) or not __import__("re").fullmatch(r"\d{4}-\d{2}-\d{2}", sc or ""):
+        errors.append(f"{pref} ({did}): sourceChecked must be YYYY-MM-DD, got {sc!r}")
+    if not d.get("species"):
+        errors.append(f"{pref} ({did}): missing species")
+if errors:
+    print("FAIL:")
+    for e in errors:
+        print(" ", e)
+    sys.exit(1)
+print(f"OK: {len(drugs)} drugs, {len(ids)} unique ids")
