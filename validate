@@ -51,6 +51,22 @@ for i, d in enumerate(drugs):
         errors.append(f"{pref} ({did}): sourceChecked must be YYYY-MM-DD, got {sc!r}")
     if not d.get("species"):
         errors.append(f"{pref} ({did}): missing species")
+    if "supportsTaper" in d and not isinstance(d.get("supportsTaper"), bool):
+        errors.append(f"{pref} ({did}): supportsTaper must be boolean if present")
+    if "dosePerKgIsDailyTotal" in d and not isinstance(d.get("dosePerKgIsDailyTotal"), bool):
+        errors.append(f"{pref} ({did}): dosePerKgIsDailyTotal must be boolean if present")
+    if "indicationOptions" in d:
+        opts = d.get("indicationOptions")
+        if not isinstance(opts, list) or not opts:
+            errors.append(f"{pref} ({did}): indicationOptions must be a non-empty list if present")
+        else:
+            for j, opt in enumerate(opts):
+                if not isinstance(opt, dict):
+                    errors.append(f"{pref} ({did}): indicationOptions[{j}] must be object")
+                    continue
+                dp = opt.get("dosePerKg")
+                if not isinstance(dp, dict) or "min" not in dp or "max" not in dp:
+                    errors.append(f"{pref} ({did}): indicationOptions[{j}] needs dosePerKg min/max")
 if errors:
     print("FAIL:")
     for e in errors:

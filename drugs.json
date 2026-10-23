@@ -348,6 +348,189 @@
           }
         }
       ]
+    },
+    {
+      "id": "prednisolone-tablets-dog",
+      "name": "prednisolone (tablets — dog)",
+      "shortName": "Prednisolone",
+      "brandNames": [
+        "Prednis-Tab",
+        "generic"
+      ],
+      "species": [
+        "dog"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "form": "tablet",
+      "frequency": "SID",
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 0.5,
+        "max": 1.0
+      },
+      "dosePerKgIsDailyTotal": true,
+      "defaultIndication": "anti-inflammatory",
+      "supportsTaper": true,
+      "tabletStrengthMg": [
+        5,
+        20
+      ],
+      "indicationOptions": [
+        {
+          "id": "anti-inflammatory",
+          "label": "Anti-inflammatory",
+          "dosePerKg": {
+            "min": 0.5,
+            "max": 1.0
+          },
+          "frequencyChoices": [
+            "SID",
+            "BID",
+            "EOD"
+          ]
+        },
+        {
+          "id": "immunosuppressive",
+          "label": "Immunosuppressive",
+          "dosePerKg": {
+            "min": 2.0,
+            "max": 4.0
+          },
+          "frequencyChoices": [
+            "SID",
+            "BID",
+            "EOD"
+          ]
+        }
+      ],
+      "notes": [
+        "1. Indication and dose for each indication",
+        "Anti-inflammatory (calculator default) — dog: 0.5–1 mg/kg PO once daily; not to exceed 40 mg/dog (NOT mg/kg) in large-breed dogs. Same total daily dose may be SID or divided BID. (Plumb 10th p.1061.)",
+        "Anti-inflammatory — cat: prednisoLONE 1–2 mg/kg PO once daily. Prefer prednisoLONE over prednisone in cats. (Plumb 10th pp.1058, 1061.)",
+        "Immunosuppressive — dog: initial 2–4 mg/kg PO once daily; many begin 2 mg/kg and divide total dose BID. Dogs >25 kg: 50–60 mg/m² once daily may be considered. Many internists: prednisone total daily dose ≤60–80 mg regardless of weight. (Plumb 10th pp.1061–1062.)",
+        "Immunosuppressive — cat: initial prednisolone 2–8 mg/kg PO once daily; many start 4 mg/kg then divide BID. Cats generally need higher doses than dogs. (Plumb 10th p.1062.)",
+        "Other Plumb uses (not calculator default): antineoplastic; hypoadrenocorticism oral replacement much lower. (Plumb 10th p.1062.)",
+        "Tablet strengths: vet-labelled prednisoLONE 5 mg and 20 mg (hospital stock). (Plumb 10th p.1063.)",
+        "2. Major adverse effects",
+        "Long-term / high-dose / non–alternate-day: iatrogenic hyperadrenocorticism; may delay growth in young animals. (Plumb 10th p.1060.)",
+        "Dogs: PU/PD/PP; dull coat, weight gain, panting, GI signs, ↑ liver enzymes, ulceration (esp. high doses), hypercoagulability, DM activation, muscle wasting, behaviour changes. (Plumb 10th p.1060.)",
+        "Cats: often higher doses but fewer AEs; greater hyperglycemic effect; occasional PU/PD/PP, diarrhea, depression; long-term high-dose Cushingoid. (Plumb 10th p.1060.)",
+        "3. Major interactions with other drugs",
+        "NSAIDs/aspirin: ↑ GI ulcer risk with glucocorticoids. Insulin: requirements may ↑. Immunosuppressive doses: avoid live attenuated vaccines; diminished response possible. (Plumb 10th pp.1058, 1061.)",
+        "Also: K-depleting diuretics/amphotericin B (hypokalemia); enzyme inducers/inhibitors altering GC metabolism; cyclosporine; fluoroquinolones (tendinopathy); warfarin — monitor; others per monograph. (Plumb 10th p.1061.)",
+        "4. Contraindications for what kinds of patients",
+        "Systemic fungal infections (unless Addison replacement); IM if idiopathic thrombocytopenia; hypersensitivity. Caution: active infection, corneal ulcer, hyperadrenocorticism, DM, osteoporosis, CHF, hypertension, renal insufficiency; hepatic dysfunction impairs prednisone→prednisoLONE conversion. (Plumb 10th pp.1058, 1060.)",
+        "Pregnancy: may induce parturition late gestation; congenital anomalies reported. Nursing: caution — unbound GC enter milk. (Plumb 10th p.1060.)",
+        "5. Earliest age to use the drug",
+        "Numeric earliest age (weeks/months): Not stated in available sources.",
+        "Glucocorticoids can delay growth in young growing animals; monitor growth/development. (Plumb 10th pp.1060, 1063.)",
+        "6. Any special instructions",
+        "Taper / do not stop abruptly: chronic GC — taper slowly; extra GC if stressor during taper. Daily therapy >1–2 weeks → HPA suppressed — taper with alternate-day therapy (daily induction → minimum daily dose → EOD). Avoid >1 mg/kg (prednisoLONE equivalent) EOD when possible. Client: do not suddenly stop without veterinarian advice. (Plumb 10th pp.1060–1061, 1063.)",
+        "Cited sample taper (dog immunosuppressive only — not a hospital protocol): 2.2 mg/kg daily (≤60–80 mg total/day) × 3 wk → 1 mg/kg daily × 3 wk → 0.5 mg/kg daily × 3 wk → 0.5 mg/kg EOD if remission maintained. (Plumb 10th p.1062.)",
+        "Give with food. Lowest dose, shortest time. Prefer prednisoLONE in cats (and horses / severe hepatic failure). (Plumb 10th pp.1058, 1063.)",
+        "7. Can the drug be crushed or split",
+        "Crushing tablets: Not stated in available sources.",
+        "Splitting / scoring marks: Not stated in available sources.",
+        "8. Others",
+        "Same monograph: PrednisoLONE / Prednisone / PrednisoLONE Sodium Succinate (pp.1058–1063). Intermediate-acting; biologic half-life ~12–36 h.",
+        "Calculator is PO tablets only. High-dose not supported for hemorrhagic/hypovolemic shock, head/spinal trauma, or sepsis. (Plumb 10th pp.1059, 1061.)",
+        "Lab: may ↑ cholesterol/urine glucose, ↓ K; suppress TSH/T3/T4; skin-test withdrawal often 14 days. (Plumb 10th p.1061.)"
+      ],
+      "source": "Plumb’s Veterinary Drug Handbook, 10th Edition — PrednisoLONE/Prednisone/PrednisoLONE Sodium Succinate monograph pp.1058–1063.",
+      "sourceChecked": "2026-10-23"
+    },
+    {
+      "id": "prednisolone-tablets-cat",
+      "name": "prednisolone (tablets — cat)",
+      "shortName": "Prednisolone",
+      "brandNames": [
+        "Prednis-Tab",
+        "generic"
+      ],
+      "species": [
+        "cat"
+      ],
+      "routes": [
+        "PO"
+      ],
+      "form": "tablet",
+      "frequency": "SID",
+      "doseUnit": "mg",
+      "dosePerKg": {
+        "min": 1.0,
+        "max": 2.0
+      },
+      "dosePerKgIsDailyTotal": true,
+      "defaultIndication": "anti-inflammatory",
+      "supportsTaper": true,
+      "tabletStrengthMg": [
+        5,
+        20
+      ],
+      "indicationOptions": [
+        {
+          "id": "anti-inflammatory",
+          "label": "Anti-inflammatory",
+          "dosePerKg": {
+            "min": 1.0,
+            "max": 2.0
+          },
+          "frequencyChoices": [
+            "SID",
+            "EOD"
+          ]
+        },
+        {
+          "id": "immunosuppressive",
+          "label": "Immunosuppressive",
+          "dosePerKg": {
+            "min": 2.0,
+            "max": 8.0
+          },
+          "frequencyChoices": [
+            "SID",
+            "BID",
+            "EOD"
+          ]
+        }
+      ],
+      "notes": [
+        "1. Indication and dose for each indication",
+        "Anti-inflammatory (calculator default) — dog: 0.5–1 mg/kg PO once daily; not to exceed 40 mg/dog (NOT mg/kg) in large-breed dogs. Same total daily dose may be SID or divided BID. (Plumb 10th p.1061.)",
+        "Anti-inflammatory — cat: prednisoLONE 1–2 mg/kg PO once daily. Prefer prednisoLONE over prednisone in cats. (Plumb 10th pp.1058, 1061.)",
+        "Immunosuppressive — dog: initial 2–4 mg/kg PO once daily; many begin 2 mg/kg and divide total dose BID. Dogs >25 kg: 50–60 mg/m² once daily may be considered. Many internists: prednisone total daily dose ≤60–80 mg regardless of weight. (Plumb 10th pp.1061–1062.)",
+        "Immunosuppressive — cat: initial prednisolone 2–8 mg/kg PO once daily; many start 4 mg/kg then divide BID. Cats generally need higher doses than dogs. (Plumb 10th p.1062.)",
+        "Other Plumb uses (not calculator default): antineoplastic; hypoadrenocorticism oral replacement much lower. (Plumb 10th p.1062.)",
+        "Tablet strengths: vet-labelled prednisoLONE 5 mg and 20 mg (hospital stock). (Plumb 10th p.1063.)",
+        "2. Major adverse effects",
+        "Long-term / high-dose / non–alternate-day: iatrogenic hyperadrenocorticism; may delay growth in young animals. (Plumb 10th p.1060.)",
+        "Dogs: PU/PD/PP; dull coat, weight gain, panting, GI signs, ↑ liver enzymes, ulceration (esp. high doses), hypercoagulability, DM activation, muscle wasting, behaviour changes. (Plumb 10th p.1060.)",
+        "Cats: often higher doses but fewer AEs; greater hyperglycemic effect; occasional PU/PD/PP, diarrhea, depression; long-term high-dose Cushingoid. (Plumb 10th p.1060.)",
+        "3. Major interactions with other drugs",
+        "NSAIDs/aspirin: ↑ GI ulcer risk with glucocorticoids. Insulin: requirements may ↑. Immunosuppressive doses: avoid live attenuated vaccines; diminished response possible. (Plumb 10th pp.1058, 1061.)",
+        "Also: K-depleting diuretics/amphotericin B (hypokalemia); enzyme inducers/inhibitors altering GC metabolism; cyclosporine; fluoroquinolones (tendinopathy); warfarin — monitor; others per monograph. (Plumb 10th p.1061.)",
+        "4. Contraindications for what kinds of patients",
+        "Systemic fungal infections (unless Addison replacement); IM if idiopathic thrombocytopenia; hypersensitivity. Caution: active infection, corneal ulcer, hyperadrenocorticism, DM, osteoporosis, CHF, hypertension, renal insufficiency; hepatic dysfunction impairs prednisone→prednisoLONE conversion. (Plumb 10th pp.1058, 1060.)",
+        "Pregnancy: may induce parturition late gestation; congenital anomalies reported. Nursing: caution — unbound GC enter milk. (Plumb 10th p.1060.)",
+        "5. Earliest age to use the drug",
+        "Numeric earliest age (weeks/months): Not stated in available sources.",
+        "Glucocorticoids can delay growth in young growing animals; monitor growth/development. (Plumb 10th pp.1060, 1063.)",
+        "6. Any special instructions",
+        "Taper / do not stop abruptly: chronic GC — taper slowly; extra GC if stressor during taper. Daily therapy >1–2 weeks → HPA suppressed — taper with alternate-day therapy (daily induction → minimum daily dose → EOD). Avoid >1 mg/kg (prednisoLONE equivalent) EOD when possible. Client: do not suddenly stop without veterinarian advice. (Plumb 10th pp.1060–1061, 1063.)",
+        "Cited sample taper (dog immunosuppressive only — not a hospital protocol): 2.2 mg/kg daily (≤60–80 mg total/day) × 3 wk → 1 mg/kg daily × 3 wk → 0.5 mg/kg daily × 3 wk → 0.5 mg/kg EOD if remission maintained. (Plumb 10th p.1062.)",
+        "Give with food. Lowest dose, shortest time. Prefer prednisoLONE in cats (and horses / severe hepatic failure). (Plumb 10th pp.1058, 1063.)",
+        "7. Can the drug be crushed or split",
+        "Crushing tablets: Not stated in available sources.",
+        "Splitting / scoring marks: Not stated in available sources.",
+        "8. Others",
+        "Same monograph: PrednisoLONE / Prednisone / PrednisoLONE Sodium Succinate (pp.1058–1063). Intermediate-acting; biologic half-life ~12–36 h.",
+        "Calculator is PO tablets only. High-dose not supported for hemorrhagic/hypovolemic shock, head/spinal trauma, or sepsis. (Plumb 10th pp.1059, 1061.)",
+        "Lab: may ↑ cholesterol/urine glucose, ↓ K; suppress TSH/T3/T4; skin-test withdrawal often 14 days. (Plumb 10th p.1061.)"
+      ],
+      "source": "Plumb’s Veterinary Drug Handbook, 10th Edition — PrednisoLONE/Prednisone/PrednisoLONE Sodium Succinate monograph pp.1058–1063.",
+      "sourceChecked": "2026-10-23"
     }
   ]
 }

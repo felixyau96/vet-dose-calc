@@ -238,6 +238,68 @@
     }
     .quantity-value.is-empty { color: var(--muted); font-weight: 600; }
     .quantity-hint { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .taper-card .taper-head {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 0.4rem 0.75rem; margin-bottom: 0.45rem;
+    }
+    .taper-card .taper-head .label { margin-bottom: 0; }
+    .taper-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .taper-actions button {
+      font-family: inherit; font-size: 0.78rem; font-weight: 650;
+      padding: 0.28rem 0.6rem; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--border); background: #fff; color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .taper-actions button:hover { border-color: var(--accent); color: var(--accent); }
+    .taper-actions button.taper-remove { color: #7a1f1f; }
+    .taper-actions button.taper-remove:hover { background: var(--danger-bg); border-color: #e0a0a0; }
+    .taper-phases { display: grid; gap: 0.55rem; }
+    .taper-phase {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+    }
+    .taper-phase-top {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 0.35rem; margin-bottom: 0.4rem;
+    }
+    .taper-phase-label {
+      font-size: 0.7rem; font-weight: 650; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--muted);
+    }
+    .taper-phase-grid {
+      display: grid;
+      grid-template-columns: minmax(4.5rem, 1fr) auto minmax(3.5rem, 0.7fr);
+      gap: 0.45rem 0.55rem; align-items: end;
+    }
+    @media (max-width: 520px) {
+      .taper-phase-grid { grid-template-columns: 1fr 1fr; }
+      .taper-phase-qty { grid-column: 1 / -1; }
+    }
+    .taper-field .mini-label {
+      font-size: 0.65rem; font-weight: 650; text-transform: uppercase;
+      letter-spacing: 0.03em; color: var(--muted); margin-bottom: 0.15rem;
+    }
+    .taper-field input.taper-perkg,
+    .taper-field input.taper-days {
+      width: 100%; min-height: 34px; padding: 0.25rem 0.4rem;
+      font-size: 0.9rem; font-variant-numeric: tabular-nums;
+    }
+    .taper-perkg-wrap {
+      display: inline-flex; align-items: center; gap: 0.25rem; width: 100%;
+    }
+    .taper-perkg-wrap input { flex: 1 1 auto; min-width: 0; }
+    .taper-perkg-wrap .dose-pick-unit { flex: 0 0 auto; }
+    .taper-freq-pills { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+    .taper-freq-pills button.freq-pick {
+      padding: 0.22rem 0.5rem; font-size: 0.75rem;
+    }
+    .taper-phase-qty .taper-phase-give {
+      min-height: 34px; display: flex; align-items: center;
+      font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums;
+      color: var(--ink);
+    }
+    .taper-phase-qty .taper-phase-give.is-empty { color: var(--muted); font-weight: 600; }
+    .taper-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.45rem; }
     .dose-pick-row {
       display: flex; flex-wrap: wrap; align-items: center;
       gap: 0.35rem 0.65rem; margin-top: 0.35rem;
@@ -453,10 +515,12 @@
     routePick: {},
     strengthPick: {},
     freqPick: {},
+    indicationPick: {},
     dosePickPerKg: {},
     dosePickDraft: {},
     daysSupply: {},
     daysSupplyDraft: {},
+    taperPhases: {},
     loadError: null,
   };
   const els = {
@@ -559,10 +623,12 @@
       delete state.routePick[id];
       delete state.strengthPick[id];
       delete state.freqPick[id];
+      delete state.indicationPick[id];
       delete state.dosePickPerKg[id];
       delete state.dosePickDraft[id];
       delete state.daysSupply[id];
       delete state.daysSupplyDraft[id];
+      delete state.taperPhases[id];
     }
     renderList();
     renderResults();
@@ -574,10 +640,12 @@
     delete state.routePick[id];
     delete state.strengthPick[id];
     delete state.freqPick[id];
+    delete state.indicationPick[id];
     delete state.dosePickPerKg[id];
     delete state.dosePickDraft[id];
     delete state.daysSupply[id];
     delete state.daysSupplyDraft[id];
+    delete state.taperPhases[id];
     renderList();
     renderResults();
   }
@@ -770,14 +838,19 @@
     return opts;
   }
 
-  /** Selected freq label (BID/SID). Override if valid, else drug.frequency if it matches an option, else first option. */
+  /** Selected freq label (BID/SID/EOD). Override if valid; else drug.frequency; else first available choice. */
   function selectedFrequency(drug) {
     var opts = frequencyOptionsOf(drug);
-    if (!opts) return String(drug.frequency || "SID").toUpperCase();
-    var labels = [];
-    for (var i = 0; i < opts.length; i++) {
-      labels.push(String(opts[i].freq || "").toUpperCase());
+    var labels;
+    if (opts) {
+      labels = [];
+      for (var i = 0; i < opts.length; i++) {
+        labels.push(String(opts[i].freq || "").toUpperCase());
+      }
+    } else {
+      labels = frequencyChoicesOf(drug);
     }
+    if (!labels || !labels.length) return String(drug.frequency || "SID").toUpperCase();
     var pick = state.freqPick[drug.id];
     if (pick != null && labels.indexOf(String(pick).toUpperCase()) !== -1) {
       return String(pick).toUpperCase();
@@ -802,13 +875,69 @@
     return selectedFrequency(drug);
   }
 
-  /** Doses/day from clear SID/BID/TID/QID only; else null (quantity shows —). */
+  function indicationOptionsOf(drug) {
+    var opts = drug && drug.indicationOptions;
+    if (!Array.isArray(opts) || !opts.length) return null;
+    return opts;
+  }
+
+  function selectedIndicationOption(drug) {
+    var opts = indicationOptionsOf(drug);
+    if (!opts) return null;
+    var pick = state.indicationPick[drug.id];
+    if (pick != null) {
+      for (var i = 0; i < opts.length; i++) {
+        if (String(opts[i].id || opts[i].label || "") === String(pick)) return opts[i];
+      }
+    }
+    // Prefer option matching defaultIndication, else first
+    var def = drug.defaultIndication || "anti-inflammatory";
+    for (var j = 0; j < opts.length; j++) {
+      if (String(opts[j].id || "") === String(def)) return opts[j];
+    }
+    return opts[0];
+  }
+
+  /** Frequency labels available for this drug/indication (SID/BID/EOD…). */
+  function frequencyChoicesOf(drug) {
+    var ind = selectedIndicationOption(drug);
+    if (ind && Array.isArray(ind.frequencyChoices) && ind.frequencyChoices.length) {
+      return ind.frequencyChoices.map(function (f) { return String(f).toUpperCase(); });
+    }
+    var opts = frequencyOptionsOf(drug);
+    if (opts) {
+      var labels = [];
+      for (var i = 0; i < opts.length; i++) {
+        var lab = String(opts[i].freq || "").toUpperCase();
+        if (lab) labels.push(lab);
+      }
+      if (labels.length) return labels;
+    }
+    if (Array.isArray(drug.frequencyChoices) && drug.frequencyChoices.length) {
+      return drug.frequencyChoices.map(function (f) { return String(f).toUpperCase(); });
+    }
+    return null;
+  }
+
+  /**
+   * Prednisolone-style: dosePerKg is total daily mg/kg.
+   * BID divides the same total across 2 doses (does NOT double like doxy).
+   */
+  function perDosePerKgFromDaily(drug, dailyPerKg, freqLabel) {
+    if (!Number.isFinite(dailyPerKg)) return dailyPerKg;
+    if (!drug || !drug.dosePerKgIsDailyTotal) return dailyPerKg;
+    if (String(freqLabel || "").toUpperCase() === "BID") return dailyPerKg / 2;
+    return dailyPerKg;
+  }
+
+  /** Doses/day from clear SID/BID/TID/QID/EOD only; else null (quantity shows —). */
   function dosesPerDay(freqLabel) {
     var f = String(freqLabel || "").toUpperCase().trim();
     if (f === "SID") return 1;
     if (f === "BID") return 2;
     if (f === "TID") return 3;
     if (f === "QID") return 4;
+    if (f === "EOD") return 0.5; // every other day
     return null;
   }
 
@@ -850,16 +979,24 @@
     return String(n);
   }
 
-  /** Per-dose Give amount: { kind: "tab"|"ml", amount } or null. */
+  /** Per-dose Give amount: { kind: "tab"|"ml", amount } or null.
+   *  When dosePerKgIsDailyTotal + BID, uses half the daily mg/kg per administration. */
   function giveAmountPerDose(drug, weightKg) {
     if (!Number.isFinite(weightKg) || weightKg <= 0) return null;
     var range = doseRange(drug, weightKg);
     if (!range) return null;
     var eff = effectivePerKg(drug);
+    var freq = frequencyOf(drug);
     var tabletMode = isTabletForm(drug) && (drug.tabletStrengthMg || []).length > 0;
     if (tabletMode) {
       if (!eff && range.fixed) return null;
-      var doseUnitAmt = eff ? eff.perKg * weightKg : (range.minDose + range.maxDose) / 2;
+      var dailyPerKg = eff ? eff.perKg : null;
+      var perDosePk = dailyPerKg != null
+        ? perDosePerKgFromDaily(drug, dailyPerKg, freq)
+        : null;
+      var doseUnitAmt = perDosePk != null
+        ? perDosePk * weightKg
+        : (range.minDose + range.maxDose) / 2;
       var midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
       var suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
       if (!suggestions.length) return null;
@@ -877,12 +1014,104 @@
         return null;
       }
       if (!eff) return null;
-      var doseAmt = eff.perKg * weightKg;
+      var perDoseL = perDosePerKgFromDaily(drug, eff.perKg, freq);
+      var doseAmt = perDoseL * weightKg;
       var vol = range.unit === "mcg" ? (doseAmt / 1000) / Number(conc) : doseAmt / Number(conc);
       if (!Number.isFinite(vol) || vol <= 0) return null;
       return { kind: "ml", amount: vol };
     }
     return null;
+  }
+
+
+  function supportsTaper(drug) {
+    return !!(drug && drug.supportsTaper);
+  }
+
+  /** Default phase from current Give mg/kg + selected frequency. */
+  function defaultTaperPhase(drug) {
+    var eff = effectivePerKg(drug);
+    var perKg = eff && Number.isFinite(eff.perKg) ? Number(eff.perKg) : null;
+    if (perKg != null) perKg = Number(perKg.toFixed(2));
+    var freq = String(frequencyOf(drug) || "SID").toUpperCase();
+    return {
+      perKg: perKg,
+      perKgDraft: perKg != null ? String(perKg) : "",
+      freq: freq,
+      days: null,
+      daysDraft: "",
+    };
+  }
+
+  function taperPhasesOf(drug) {
+    if (!supportsTaper(drug)) return null;
+    var phases = state.taperPhases[drug.id];
+    if (!Array.isArray(phases) || !phases.length) {
+      phases = [defaultTaperPhase(drug)];
+      state.taperPhases[drug.id] = phases;
+    }
+    return phases;
+  }
+
+  /** Clamp per-kg to labelled / effective band (same rules as desired-dose pick). */
+  function clampTaperPerKg(drug, raw) {
+    var v = Number(raw);
+    if (!Number.isFinite(v)) return null;
+    var eff = effectivePerKg(drug);
+    if (eff) {
+      if (v < eff.min) v = eff.min;
+      if (v > eff.max) v = eff.max;
+    }
+    return Number(v.toFixed(2));
+  }
+
+  /**
+   * Give amount for a phase's mg/kg (uses selected tablet strength when tablet).
+   * Returns { kind, amount, strength? } or null.
+   */
+  function giveAmountAtPerKg(drug, weightKg, perKg, freqLabel) {
+    if (!Number.isFinite(weightKg) || weightKg <= 0) return null;
+    if (!Number.isFinite(perKg) || perKg <= 0) return null;
+    var unit = (drug.doseUnit || "mg");
+    if (unit === "U") unit = "U";
+    var freq = freqLabel != null ? freqLabel : frequencyOf(drug);
+    var perDosePk = perDosePerKgFromDaily(drug, perKg, freq);
+    var tabletMode = isTabletForm(drug) && (drug.tabletStrengthMg || []).length > 0;
+    if (tabletMode) {
+      var doseUnitAmt = perDosePk * weightKg;
+      var midMg = unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
+      var suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
+      if (!suggestions.length) return null;
+      var chosen = selectedTabletSuggestion(drug, suggestions);
+      if (!chosen || !Number.isFinite(chosen.tablets)) return null;
+      return { kind: "tab", amount: chosen.tablets, strength: chosen.strength };
+    }
+    var liquidMode = !tabletMode && (
+      isLiquidOrInj(drug) ||
+      (drug.concentrationMgPerMl != null && Number(drug.concentrationMgPerMl) > 0)
+    );
+    if (liquidMode) {
+      var conc = drug.concentrationMgPerMl;
+      if (conc == null || !(Number(conc) > 0) || !(unit === "mg" || unit === "mcg")) {
+        return null;
+      }
+      var doseAmt = perDosePk * weightKg;
+      var vol = unit === "mcg" ? (doseAmt / 1000) / Number(conc) : doseAmt / Number(conc);
+      if (!Number.isFinite(vol) || vol <= 0) return null;
+      return { kind: "ml", amount: vol };
+    }
+    return null;
+  }
+
+  function phaseQuantityRaw(drug, weightKg, phase) {
+    var days = phase && phase.days;
+    if (days == null || !(Number(days) >= 1)) return null;
+    var dpd = dosesPerDay(phase.freq);
+    if (dpd == null) return { error: "freq" };
+    var perKg = phase.perKg != null ? Number(phase.perKg) : NaN;
+    var give = giveAmountAtPerKg(drug, weightKg, perKg, phase.freq);
+    if (!give || !Number.isFinite(give.amount)) return null;
+    return { kind: give.kind, amount: give.amount * dpd * Number(days), give: give };
   }
 
   /** Whole tablets for course quantity: always round up (ceil). */
@@ -894,8 +1123,32 @@
     return String(tabs);
   }
 
-  /** { text, hint } — text is display string e.g. "14 tab" or "—". */
+  /** { text, hint } — text is display string e.g. "14 tab" or "—".
+   *  Taper drugs (supportsTaper): sum phase quantities (ceil tabs once on the sum).
+   *  Others: Days to supply × Give × doses/day. */
   function computeQuantityRequired(drug, weightKg) {
+    if (supportsTaper(drug)) {
+      var phases = taperPhasesOf(drug);
+      var totalTabs = 0;
+      var totalMl = 0;
+      var kind = null;
+      var anyDays = false;
+      var freqMissing = false;
+      for (var i = 0; i < phases.length; i++) {
+        var raw = phaseQuantityRaw(drug, weightKg, phases[i]);
+        if (raw && raw.error === "freq") { freqMissing = true; continue; }
+        if (!raw) continue;
+        anyDays = true;
+        kind = raw.kind;
+        if (raw.kind === "tab") totalTabs += raw.amount;
+        else if (raw.kind === "ml") totalMl += raw.amount;
+      }
+      if (freqMissing && !anyDays) return { text: "—", hint: "set frequency" };
+      if (!anyDays) return { text: "—", hint: "" };
+      if (kind === "tab") return { text: fmtTabQty(totalTabs) + " tab", hint: "" };
+      if (kind === "ml") return { text: fmtVolMl(totalMl) + " mL", hint: "" };
+      return { text: "—", hint: "" };
+    }
     var days = state.daysSupply[drug.id];
     if (days == null || !(Number(days) >= 1)) {
       return { text: "—", hint: "" };
@@ -936,7 +1189,9 @@
     var copyLines = [];
     state.selectedIds.forEach(function (id) {
       var d = drugById(id);
-      if (d) copyLines.push(buildCopyLine(d, weightKg));
+      if (!d) return;
+      var lines = buildCopyLines(d, weightKg);
+      for (var i = 0; i < lines.length; i++) copyLines.push(lines[i]);
     });
     els.copyBox.value = copyLines.join("\n");
     els.btnCopy.disabled = copyLines.length === 0;
@@ -948,67 +1203,73 @@
     var grid = document.createElement("div");
     grid.className = "supply-grid";
 
-    var daysField = document.createElement("div");
-    daysField.className = "supply-field";
-    var daysLabel = document.createElement("div");
-    daysLabel.className = "label";
-    daysLabel.textContent = "Days to supply";
-    daysField.appendChild(daysLabel);
-    var daysInp = document.createElement("input");
-    daysInp.type = "text";
-    daysInp.className = "days-supply-input";
-    daysInp.inputMode = "numeric";
-    daysInp.autocomplete = "off";
-    daysInp.placeholder = "—";
-    daysInp.setAttribute("aria-label", "Days to supply");
-    var draft = state.daysSupplyDraft[drug.id];
-    var stored = state.daysSupply[drug.id];
-    if (draft != null) {
-      daysInp.value = String(draft);
-    } else if (stored != null && Number(stored) >= 1) {
-      daysInp.value = String(stored);
-    }
-    function onDaysInput() {
-      var start = daysInp.selectionStart;
-      var before = daysInp.value;
-      var cleaned = applyDaysFromDraft(drug.id, before);
-      if (cleaned !== before) {
-        daysInp.value = cleaned;
-        try {
-          var lim = start == null ? before.length : start;
-          var kept = 0;
-          for (var i = 0; i < before.length && i < lim; i++) {
-            var ch = before.charAt(i);
-            if (ch >= "0" && ch <= "9") kept++;
-          }
-          daysInp.setSelectionRange(Math.min(kept, cleaned.length), Math.min(kept, cleaned.length));
-        } catch (e) { /* ignore */ }
+    var useTaper = supportsTaper(drug);
+
+    if (!useTaper) {
+      var daysField = document.createElement("div");
+      daysField.className = "supply-field";
+      var daysLabel = document.createElement("div");
+      daysLabel.className = "label";
+      daysLabel.textContent = "Days to supply";
+      daysField.appendChild(daysLabel);
+      var daysInp = document.createElement("input");
+      daysInp.type = "text";
+      daysInp.className = "days-supply-input";
+      daysInp.inputMode = "numeric";
+      daysInp.autocomplete = "off";
+      daysInp.placeholder = "—";
+      daysInp.setAttribute("aria-label", "Days to supply");
+      var draft = state.daysSupplyDraft[drug.id];
+      var stored = state.daysSupply[drug.id];
+      if (draft != null) {
+        daysInp.value = String(draft);
+      } else if (stored != null && Number(stored) >= 1) {
+        daysInp.value = String(stored);
       }
-      var w = parseFloat(els.weight.value);
-      var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
-      refreshQuantityInCard(resultCard, drug, w);
-      rebuildCopyBox(w);
-    }
-    function onDaysFinalize() {
-      var next = finalizeDaysSupply(drug.id, daysInp.value);
-      daysInp.value = next;
-      var w = parseFloat(els.weight.value);
-      var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
-      refreshQuantityInCard(resultCard, drug, w);
-      rebuildCopyBox(w);
-    }
-    daysInp.addEventListener("input", onDaysInput);
-    daysInp.addEventListener("blur", onDaysFinalize);
-    daysInp.addEventListener("keydown", function (ev) {
-      if (ev.key === "Enter") {
-        ev.preventDefault();
-        daysInp.blur();
+      function onDaysInput() {
+        var startPos = daysInp.selectionStart;
+        var before = daysInp.value;
+        var cleaned = applyDaysFromDraft(drug.id, before);
+        if (cleaned !== before) {
+          daysInp.value = cleaned;
+          try {
+            var lim = startPos == null ? before.length : startPos;
+            var kept = 0;
+            for (var i = 0; i < before.length && i < lim; i++) {
+              var ch = before.charAt(i);
+              if (ch >= "0" && ch <= "9") kept++;
+            }
+            daysInp.setSelectionRange(Math.min(kept, cleaned.length), Math.min(kept, cleaned.length));
+          } catch (e) { /* ignore */ }
+        }
+        var w = parseFloat(els.weight.value);
+        var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+        refreshQuantityInCard(resultCard, drug, w);
+        rebuildCopyBox(w);
       }
-    });
-    daysField.appendChild(daysInp);
+      function onDaysFinalize() {
+        var next = finalizeDaysSupply(drug.id, daysInp.value);
+        daysInp.value = next;
+        var w = parseFloat(els.weight.value);
+        var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+        refreshQuantityInCard(resultCard, drug, w);
+        rebuildCopyBox(w);
+      }
+      daysInp.addEventListener("input", onDaysInput);
+      daysInp.addEventListener("blur", onDaysFinalize);
+      daysInp.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          daysInp.blur();
+        }
+      });
+      daysField.appendChild(daysInp);
+      grid.appendChild(daysField);
+    }
 
     var qtyField = document.createElement("div");
     qtyField.className = "supply-field";
+    if (useTaper) qtyField.style.gridColumn = "1 / -1";
     var qtyLabel = document.createElement("div");
     qtyLabel.className = "label";
     qtyLabel.textContent = "Quantity required";
@@ -1028,17 +1289,323 @@
     qtyHint.hidden = !q.hint;
     qtyField.appendChild(qtyHint);
 
-    grid.appendChild(daysField);
     grid.appendChild(qtyField);
     card.appendChild(grid);
     gridEl.appendChild(card);
+
+    if (useTaper) appendTaperSchedule(gridEl, drug, weightKg);
   }
 
+  var TAPER_FREQ_CHOICES = ["SID", "BID", "EOD"];
 
-  /** Top-level formulary per-kg band (ignores frequencyOptions). */
+  function taperFreqChoicesFor(drug) {
+    var choices = frequencyChoicesOf(drug);
+    if (choices && choices.length) return choices;
+    return TAPER_FREQ_CHOICES.slice();
+  }
+
+  function refreshTaperPhaseGive(rowEl, drug, weightKg, phase) {
+    var giveEl = rowEl.querySelector('[data-role="taper-phase-give"]');
+    if (!giveEl) return;
+    var perKg = phase.perKg != null ? Number(phase.perKg) : NaN;
+    var give = giveAmountAtPerKg(drug, weightKg, perKg, phase.freq);
+    if (!give) {
+      giveEl.textContent = "—";
+      giveEl.classList.add("is-empty");
+      return;
+    }
+    giveEl.classList.remove("is-empty");
+    if (give.kind === "tab") {
+      giveEl.textContent = fmtNum(give.amount) + " tab" +
+        (give.strength != null ? " · " + fmtNum(give.strength) + " mg" : "");
+    } else if (give.kind === "ml") {
+      giveEl.textContent = fmtVolMl(give.amount) + " mL";
+    } else {
+      giveEl.textContent = "—";
+      giveEl.classList.add("is-empty");
+    }
+  }
+
+  function appendTaperSchedule(gridEl, drug, weightKg) {
+    var phases = taperPhasesOf(drug);
+    var card = document.createElement("div");
+    card.className = "dose-card taper-card";
+    card.setAttribute("data-role", "taper-schedule");
+
+    var head = document.createElement("div");
+    head.className = "taper-head";
+    var title = document.createElement("div");
+    title.className = "label";
+    title.textContent = "Taper schedule";
+    head.appendChild(title);
+    var actions = document.createElement("div");
+    actions.className = "taper-actions";
+    var addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.textContent = "Add phase";
+    addBtn.setAttribute("aria-label", "Add taper phase");
+    addBtn.addEventListener("click", function () {
+      var list = taperPhasesOf(drug);
+      var prev = list.length ? list[list.length - 1] : defaultTaperPhase(drug);
+      var next = {
+        perKg: prev.perKg,
+        perKgDraft: prev.perKg != null ? String(prev.perKg) : "",
+        freq: prev.freq || "SID",
+        days: null,
+        daysDraft: "",
+      };
+      list.push(next);
+      renderResults();
+    });
+    actions.appendChild(addBtn);
+    head.appendChild(actions);
+    card.appendChild(head);
+
+    var listEl = document.createElement("div");
+    listEl.className = "taper-phases";
+
+    var labelled = labelledDoseBand(drug);
+    var unitSuffix = perKgUnitLabel(labelled ? labelled.unit : (drug.doseUnit || "mg"));
+
+    phases.forEach(function (phase, idx) {
+      var row = document.createElement("div");
+      row.className = "taper-phase";
+      row.setAttribute("data-phase-index", String(idx));
+
+      var top = document.createElement("div");
+      top.className = "taper-phase-top";
+      var lab = document.createElement("div");
+      lab.className = "taper-phase-label";
+      lab.textContent = "Phase " + (idx + 1);
+      top.appendChild(lab);
+      if (phases.length > 1) {
+        var rm = document.createElement("button");
+        rm.type = "button";
+        rm.className = "taper-remove";
+        rm.textContent = "Remove";
+        rm.setAttribute("aria-label", "Remove phase " + (idx + 1));
+        rm.addEventListener("click", function () {
+          var list = taperPhasesOf(drug);
+          if (list.length <= 1) return;
+          list.splice(idx, 1);
+          renderResults();
+        });
+        var rmWrap = document.createElement("div");
+        rmWrap.className = "taper-actions";
+        rmWrap.appendChild(rm);
+        top.appendChild(rmWrap);
+      }
+      row.appendChild(top);
+
+      var g = document.createElement("div");
+      g.className = "taper-phase-grid";
+
+      // mg/kg
+      var fDose = document.createElement("div");
+      fDose.className = "taper-field";
+      var dl = document.createElement("div");
+      dl.className = "mini-label";
+      dl.textContent = "Dose";
+      fDose.appendChild(dl);
+      var wrap = document.createElement("div");
+      wrap.className = "taper-perkg-wrap";
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.className = "taper-perkg";
+      inp.inputMode = "decimal";
+      inp.autocomplete = "off";
+      inp.setAttribute("aria-label", "Phase " + (idx + 1) + " dose " + unitSuffix);
+      var eff = effectivePerKg(drug);
+      inp.placeholder = eff ? fmtNum(eff.defaultPerKg, 2) : "—";
+      if (phase.perKgDraft != null && phase.perKgDraft !== "") {
+        inp.value = String(phase.perKgDraft);
+      } else if (phase.perKg != null && Number.isFinite(Number(phase.perKg))) {
+        inp.value = String(phase.perKg);
+      }
+      var unitLab = document.createElement("span");
+      unitLab.className = "dose-pick-unit";
+      unitLab.textContent = unitSuffix;
+      function onPerKgInput() {
+        var cleaned = sanitizeDosePickDraft(inp.value);
+        if (cleaned !== inp.value) inp.value = cleaned;
+        phase.perKgDraft = cleaned;
+        if (cleaned === "" || dosePickDraftIncomplete(cleaned)) {
+          if (cleaned === "") phase.perKg = null;
+        } else {
+          var clamped = clampTaperPerKg(drug, parseFloat(cleaned));
+          phase.perKg = clamped;
+        }
+        refreshTaperPhaseGive(row, drug, weightKg, phase);
+        var w = parseFloat(els.weight.value);
+        var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+        refreshQuantityInCard(resultCard, drug, w);
+        rebuildCopyBox(w);
+      }
+      function onPerKgFinalize() {
+        var cleaned = sanitizeDosePickDraft(inp.value);
+        if (cleaned === "" || cleaned === ".") {
+          // Restore default from current Give
+          var def = defaultTaperPhase(drug);
+          phase.perKg = def.perKg;
+          phase.perKgDraft = def.perKgDraft;
+          inp.value = phase.perKgDraft || "";
+        } else {
+          var clamped = clampTaperPerKg(drug, parseFloat(cleaned));
+          phase.perKg = clamped;
+          phase.perKgDraft = clamped != null ? String(clamped) : "";
+          inp.value = phase.perKgDraft;
+        }
+        refreshTaperPhaseGive(row, drug, weightKg, phase);
+        var w = parseFloat(els.weight.value);
+        var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+        refreshQuantityInCard(resultCard, drug, w);
+        rebuildCopyBox(w);
+      }
+      inp.addEventListener("input", onPerKgInput);
+      inp.addEventListener("blur", onPerKgFinalize);
+      inp.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter") { ev.preventDefault(); inp.blur(); }
+      });
+      wrap.appendChild(inp);
+      wrap.appendChild(unitLab);
+      fDose.appendChild(wrap);
+      g.appendChild(fDose);
+
+      // frequency
+      var fFreq = document.createElement("div");
+      fFreq.className = "taper-field";
+      var fl = document.createElement("div");
+      fl.className = "mini-label";
+      fl.textContent = "Frequency";
+      fFreq.appendChild(fl);
+      var pills = document.createElement("div");
+      pills.className = "taper-freq-pills";
+      pills.setAttribute("role", "group");
+      pills.setAttribute("aria-label", "Phase " + (idx + 1) + " frequency");
+      var curF = String(phase.freq || "SID").toUpperCase();
+      var phaseFreqs = taperFreqChoicesFor(drug);
+      if (phaseFreqs.indexOf(curF) === -1) {
+        curF = phaseFreqs[0] || "SID";
+        phase.freq = curF;
+      }
+      phaseFreqs.forEach(function (label) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "freq-pick" + (label === curF ? " active" : "");
+        btn.textContent = label;
+        btn.addEventListener("click", function () {
+          phase.freq = label;
+          renderResults();
+        });
+        pills.appendChild(btn);
+      });
+      fFreq.appendChild(pills);
+      g.appendChild(fFreq);
+
+      // days
+      var fDays = document.createElement("div");
+      fDays.className = "taper-field";
+      var dyl = document.createElement("div");
+      dyl.className = "mini-label";
+      dyl.textContent = "Days";
+      fDays.appendChild(dyl);
+      var daysInp = document.createElement("input");
+      daysInp.type = "text";
+      daysInp.className = "taper-days";
+      daysInp.inputMode = "numeric";
+      daysInp.autocomplete = "off";
+      daysInp.placeholder = "—";
+      daysInp.setAttribute("aria-label", "Phase " + (idx + 1) + " days");
+      if (phase.daysDraft != null && phase.daysDraft !== "") {
+        daysInp.value = String(phase.daysDraft);
+      } else if (phase.days != null && Number(phase.days) >= 1) {
+        daysInp.value = String(phase.days);
+      }
+      function onPhaseDaysInput() {
+        var before = daysInp.value;
+        var cleaned = sanitizeDaysDraft(before);
+        if (cleaned !== before) daysInp.value = cleaned;
+        phase.daysDraft = cleaned;
+        if (cleaned === "") {
+          phase.days = null;
+        } else {
+          var n = parseInt(cleaned, 10);
+          phase.days = (Number.isFinite(n) && n >= 1) ? n : null;
+        }
+        var w = parseFloat(els.weight.value);
+        var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+        refreshQuantityInCard(resultCard, drug, w);
+        rebuildCopyBox(w);
+      }
+      function onPhaseDaysFinalize() {
+        var cleaned = sanitizeDaysDraft(daysInp.value);
+        if (cleaned === "") {
+          phase.days = null;
+          phase.daysDraft = "";
+          daysInp.value = "";
+        } else {
+          var n = parseInt(cleaned, 10);
+          if (!Number.isFinite(n) || n < 1) {
+            phase.days = null;
+            phase.daysDraft = "";
+            daysInp.value = "";
+          } else {
+            phase.days = n;
+            phase.daysDraft = String(n);
+            daysInp.value = String(n);
+          }
+        }
+        var w = parseFloat(els.weight.value);
+        var resultCard = els.resultsHost.querySelector('.result-card[data-id="' + drug.id + '"]');
+        refreshQuantityInCard(resultCard, drug, w);
+        rebuildCopyBox(w);
+      }
+      daysInp.addEventListener("input", onPhaseDaysInput);
+      daysInp.addEventListener("blur", onPhaseDaysFinalize);
+      daysInp.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter") { ev.preventDefault(); daysInp.blur(); }
+      });
+      fDays.appendChild(daysInp);
+      g.appendChild(fDays);
+
+      // computed give for phase
+      var fQty = document.createElement("div");
+      fQty.className = "taper-field taper-phase-qty";
+      var ql = document.createElement("div");
+      ql.className = "mini-label";
+      ql.textContent = "Per dose";
+      fQty.appendChild(ql);
+      var giveEl = document.createElement("div");
+      giveEl.className = "taper-phase-give";
+      giveEl.setAttribute("data-role", "taper-phase-give");
+      fQty.appendChild(giveEl);
+      g.appendChild(fQty);
+
+      row.appendChild(g);
+      refreshTaperPhaseGive(row, drug, weightKg, phase);
+      listEl.appendChild(row);
+    });
+
+    card.appendChild(listEl);
+    var note = document.createElement("p");
+    note.className = "taper-note";
+    note.textContent = "Quantity required sums all phases (tablets rounded up). One phase with days works like Days to supply; add phases for a taper. Clinical taper reminders stay in Notes.";
+    card.appendChild(note);
+    gridEl.appendChild(card);
+  }
+
+  /** Formulary per-kg band: selected indicationOptions dose when present, else top-level dosePerKg. */
   function labelledDoseBand(drug) {
-    var perKg = drug.dosePerKg;
     var unit = drug.doseUnit || "mg";
+    var ind = selectedIndicationOption(drug);
+    var perKg = null;
+    if (ind && ind.dosePerKg &&
+        Number.isFinite(Number(ind.dosePerKg.min)) &&
+        Number.isFinite(Number(ind.dosePerKg.max))) {
+      perKg = ind.dosePerKg;
+    } else {
+      perKg = drug.dosePerKg;
+    }
     if (perKg && Number.isFinite(Number(perKg.min)) && Number.isFinite(Number(perKg.max))) {
       if (unit === "U") unit = "U";
       return { min: Number(perKg.min), max: Number(perKg.max), unit: unit };
@@ -1218,7 +1785,8 @@
             drug.concentrationMgPerMl != null && Number(drug.concentrationMgPerMl) > 0 &&
             Number.isFinite(w) && w > 0 && eff) {
           var c = Number(drug.concentrationMgPerMl);
-          var doseAmt = eff.perKg * w;
+          var perDoseR = perDosePerKgFromDaily(drug, eff.perKg, frequencyOf(drug));
+          var doseAmt = perDoseR * w;
           var vol = range.unit === "mcg" ? (doseAmt / 1000) / c : doseAmt / c;
           var concBadge =
             '<span class="conc-sep">·</span> <span class="conc-badge">' +
@@ -1229,6 +1797,58 @@
     }
     refreshQuantityInCard(card, drug, w);
     rebuildCopyBox(w);
+  }
+
+  /** Taper copy line: Name X mg/kg (N tab) ROUTE FREQ × Nd — final tabs, no course qty suffix. */
+  function buildTaperCopyLine(drug, weightKg, phase) {
+    var name = shortDrugName(drug);
+    var route = selectedRoute(drug) || "—";
+    var freq = String(phase.freq || "SID").toUpperCase();
+    var days = phase.days;
+    var daysSuffix = (days != null && Number(days) >= 1) ? (" × " + Number(days) + "d") : "";
+    var perKg = phase.perKg != null ? Number(phase.perKg) : NaN;
+    var unitLab = perKgUnitLabel(drug.doseUnit || "mg");
+    var give = giveAmountAtPerKg(drug, weightKg, perKg, freq);
+    if (!Number.isFinite(weightKg) || weightKg <= 0 || !Number.isFinite(perKg)) {
+      return name + " — enter weight — " + String(route).toUpperCase() + " " + freq + daysSuffix;
+    }
+    if (give && give.kind === "tab") {
+      return name + " " + fmtNum(perKg) + " " + unitLab +
+        " (" + fmtNum(give.amount) + " tab) " +
+        String(route).toUpperCase() + " " + freq + daysSuffix;
+    }
+    if (give && give.kind === "ml") {
+      return name + " " + fmtNum(perKg) + " " + unitLab +
+        " (" + fmtVolMl(give.amount) + " mL) " +
+        String(route).toUpperCase() + " " + freq + daysSuffix;
+    }
+    return name + " " +
+      (Number.isFinite(perKg) ? fmtNum(perKg) + " " + unitLab + " " : "") +
+      String(route).toUpperCase() + " " + freq + daysSuffix;
+  }
+
+  /**
+   * One or more copy lines for a drug.
+   * Taper (supportsTaper): when ≥2 phases or any phase has days, emit taper-format
+   * lines (one per phase). Otherwise fall back to the normal single Give line.
+   */
+  function buildCopyLines(drug, weightKg) {
+    if (supportsTaper(drug)) {
+      var phases = taperPhasesOf(drug);
+      var multi = phases.length >= 2;
+      var anyDays = false;
+      for (var i = 0; i < phases.length; i++) {
+        if (phases[i].days != null && Number(phases[i].days) >= 1) { anyDays = true; break; }
+      }
+      if (multi || anyDays) {
+        var out = [];
+        for (var j = 0; j < phases.length; j++) {
+          out.push(buildTaperCopyLine(drug, weightKg, phases[j]));
+        }
+        return out;
+      }
+    }
+    return [buildCopyLine(drug, weightKg)];
   }
 
   function buildCopyLine(drug, weightKg) {
@@ -1242,7 +1862,13 @@
         return name + " — enter weight — " + String(route).toUpperCase() + " " + freq;
       }
       var effT = effectivePerKg(drug);
-      var doseUnitAmt = effT ? effT.perKg * weightKg : (range.minDose + range.maxDose) / 2;
+      var dailyT = effT ? effT.perKg : null;
+      var perDoseT = dailyT != null
+        ? perDosePerKgFromDaily(drug, dailyT, freq)
+        : null;
+      var doseUnitAmt = perDoseT != null
+        ? perDoseT * weightKg
+        : (range.minDose + range.maxDose) / 2;
       var midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
       var suggestions = tabletSuggestions(midMg, drug.tabletStrengthMg);
       if (!suggestions.length) {
@@ -1272,7 +1898,8 @@
       if (isVolForm && concRaw != null && Number(concRaw) > 0 &&
           effL && Number.isFinite(weightKg) && weightKg > 0 &&
           (effL.unit === "mg" || effL.unit === "mcg")) {
-        var doseAmt = effL.perKg * weightKg;
+        var perDoseCL = perDosePerKgFromDaily(drug, effL.perKg, freq);
+        var doseAmt = perDoseCL * weightKg;
         var volMl = (effL.unit === "mcg" ? doseAmt / 1000 : doseAmt) / Number(concRaw);
         volPart = " (" + fmtVolMl(volMl) + " mL)";
       }
@@ -1350,7 +1977,8 @@
       var labelledRange = !!(labelled && Math.abs(labelled.min - labelled.max) >= 1e-9);
       var effectiveRange = !range.fixed && range.perKgMin != null &&
         Math.abs(range.perKgMin - range.perKgMax) >= 1e-9;
-      var showPick = liquidMode && !range.fixed && (labelledRange || effectiveRange);
+      var allowTabletPick = tabletMode && (indicationOptionsOf(drug) || supportsTaper(drug));
+      var showPick = !range.fixed && (labelledRange || effectiveRange) && (liquidMode || allowTabletPick);
       var text;
       if (showPick && labelledRange) {
         var unitLabelL = labelled.unit === "U" ? "units" : labelled.unit;
@@ -1459,7 +2087,13 @@
     var eff = effectivePerKg(drug);
 
     if (tabletMode) {
-      var doseUnitAmt = eff ? eff.perKg * w : (range.minDose + range.maxDose) / 2;
+      var dailyPk = eff ? eff.perKg : null;
+      var perDosePkTab = dailyPk != null
+        ? perDosePerKgFromDaily(drug, dailyPk, frequencyOf(drug))
+        : null;
+      var doseUnitAmt = perDosePkTab != null
+        ? perDosePkTab * w
+        : (range.minDose + range.maxDose) / 2;
       const midMg = range.unit === "mcg" ? doseUnitAmt / 1000 : doseUnitAmt;
       const strengths = drug.tabletStrengthMg || [];
       const suggestions = tabletSuggestions(midMg, strengths);
@@ -1549,7 +2183,13 @@
         return;
       }
       const c = Number(conc);
-      var doseAmt = eff ? eff.perKg * w : (range.minDose + range.maxDose) / 2;
+      var dailyL = eff ? eff.perKg : null;
+      var perDoseL = dailyL != null
+        ? perDosePerKgFromDaily(drug, dailyL, frequencyOf(drug))
+        : null;
+      var doseAmt = perDoseL != null
+        ? perDoseL * w
+        : (range.minDose + range.maxDose) / 2;
       var vol;
       if (range.unit === "mcg") {
         vol = (doseAmt / 1000) / c;
@@ -1727,8 +2367,59 @@
       dl.appendChild(dtR);
       dl.appendChild(ddR);
 
+      var indOpts = indicationOptionsOf(drug);
+      if (indOpts && indOpts.length >= 2) {
+        const dtI = document.createElement("dt");
+        dtI.textContent = "Indication";
+        const ddI = document.createElement("dd");
+        var indWrap = document.createElement("div");
+        indWrap.className = "freq-pills";
+        indWrap.setAttribute("role", "group");
+        indWrap.setAttribute("aria-label", "Indication");
+        var curInd = selectedIndicationOption(drug);
+        var curId = curInd ? String(curInd.id || curInd.label || "") : "";
+        indOpts.forEach(function (opt) {
+          var oid = String(opt.id || opt.label || "");
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "freq-pick" + (oid === curId ? " active" : "");
+          btn.style.textTransform = "none";
+          btn.textContent = opt.label || oid;
+          btn.addEventListener("click", function () {
+            state.indicationPick[id] = oid;
+            delete state.strengthPick[id];
+            delete state.dosePickPerKg[id];
+            delete state.dosePickDraft[id];
+            // Drop freq if not allowed for new indication
+            var allowed = (opt.frequencyChoices || []).map(function (f) {
+              return String(f).toUpperCase();
+            });
+            if (allowed.length) {
+              var cur = state.freqPick[id] || frequencyOf(drug);
+              if (allowed.indexOf(String(cur).toUpperCase()) === -1) {
+                state.freqPick[id] = allowed[0];
+              }
+            }
+            // Reset taper phase defaults to new indication midpoint on next ensure
+            // (keep user phases but clamp perKg on re-render via blur); re-seed if single untouched phase
+            var phases = state.taperPhases[id];
+            if (phases && phases.length === 1) {
+              state.taperPhases[id] = null;
+              delete state.taperPhases[id];
+            }
+            renderResults();
+          });
+          indWrap.appendChild(btn);
+        });
+        ddI.appendChild(indWrap);
+        dl.appendChild(dtI);
+        dl.appendChild(ddI);
+      }
+
       var freqOpts = frequencyOptionsOf(drug);
-      var hasFreqPills = freqOpts && freqOpts.length >= 2;
+      var freqChoices = frequencyChoicesOf(drug);
+      var hasFreqPills = (freqOpts && freqOpts.length >= 2) ||
+        (!freqOpts && freqChoices && freqChoices.length >= 2);
       if (hasFreqPills || drug.frequency) {
         const dtF = document.createElement("dt");
         dtF.textContent = "Frequency";
@@ -1739,9 +2430,10 @@
           freqWrap.setAttribute("role", "group");
           freqWrap.setAttribute("aria-label", "Frequency");
           var currentF = selectedFrequency(drug);
-          freqOpts.forEach(function (opt) {
-            var label = String(opt.freq || "").toUpperCase();
-            if (!label) return;
+          var labels = freqOpts
+            ? freqOpts.map(function (opt) { return String(opt.freq || "").toUpperCase(); }).filter(Boolean)
+            : freqChoices.slice();
+          labels.forEach(function (label) {
             var btn = document.createElement("button");
             btn.type = "button";
             btn.className = "freq-pick" + (label === currentF ? " active" : "");
@@ -1749,19 +2441,23 @@
             btn.addEventListener("click", function () {
               state.freqPick[id] = label;
               delete state.strengthPick[id];
-              var optDose = null;
-              for (var fi = 0; fi < freqOpts.length; fi++) {
-                if (String(freqOpts[fi].freq || "").toUpperCase() === label) {
-                  optDose = freqOpts[fi].dosePerKg;
-                  break;
+              // Doxy-style: switching freq may change dosePerKg band via frequencyOptions.
+              // Prednisolone-style (dosePerKgIsDailyTotal): same daily band — do not overwrite pick.
+              if (freqOpts && !drug.dosePerKgIsDailyTotal) {
+                var optDose = null;
+                for (var fi = 0; fi < freqOpts.length; fi++) {
+                  if (String(freqOpts[fi].freq || "").toUpperCase() === label) {
+                    optDose = freqOpts[fi].dosePerKg;
+                    break;
+                  }
                 }
+                if (optDose && Number.isFinite(Number(optDose.min))) {
+                  state.dosePickPerKg[id] = Number(optDose.min);
+                } else {
+                  delete state.dosePickPerKg[id];
+                }
+                delete state.dosePickDraft[id];
               }
-              if (optDose && Number.isFinite(Number(optDose.min))) {
-                state.dosePickPerKg[id] = Number(optDose.min);
-              } else {
-                delete state.dosePickPerKg[id];
-              }
-              delete state.dosePickDraft[id];
               renderResults();
             });
             freqWrap.appendChild(btn);
@@ -1795,7 +2491,8 @@
       card.appendChild(srcBox);
 
       els.resultsHost.appendChild(card);
-      copyLines.push(buildCopyLine(drug, w));
+      var lines = buildCopyLines(drug, w);
+      for (var li = 0; li < lines.length; li++) copyLines.push(lines[li]);
     });
 
     els.copyBox.value = copyLines.join("\n");
